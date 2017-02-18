@@ -1,6 +1,6 @@
 # GOP
 
-GOP is a golang project management tool only for golang application project which could be put anywhere(not in the GOPATH). Also this means it's not go-getable. GOP copy all denpendencies to src directory and all application's source is also in this directory. 
+GOP is a project manangement tool for golang application projects which you can place it anywhere(not in the GOPATH). Also this means it's not go-getable. GOP copy all denpendencies to src directory and all application's source is also in this directory. 
 
 So a common process is below:
 

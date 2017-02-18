@@ -20,7 +20,7 @@ const (
 func main() {
 	app := cli.NewApp()
 	app.Name = "Gop"
-	app.Usage = "A golang project manangement tool for executable projects"
+	app.Usage = "A project manangement tool for golang application projects"
 	app.Version = Version
 	app.Commands = []cli.Command{
 		cmd.CmdInit,
