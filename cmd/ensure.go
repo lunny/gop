@@ -14,6 +14,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/lunny/gop/util"
 	"github.com/urfave/cli"
 )
 
@@ -27,6 +28,10 @@ var CmdEnsure = cli.Command{
 		cli.BoolFlag{
 			Name:  "dry, d",
 			Usage: "Dry run, print what would be done",
+		},
+		cli.BoolFlag{
+			Name:  "get, g",
+			Usage: "call go get to download the package if package is not in GOPATH",
 		},
 	},
 }
@@ -54,6 +59,9 @@ func runEnsure(cmd *cli.Context) error {
 		return err
 	}
 	for _, imp := range imports {
+		// get parent package
+		imp, _ = util.NormalizeName(imp)
+
 		// FIXME: imp only UNIX
 		p := filepath.Join(srcDir, imp)
 		exist, err := isDirExist(p)
@@ -66,6 +74,23 @@ func runEnsure(cmd *cli.Context) error {
 			// copy data from GOPATH
 			srcDir := filepath.Join(globalGoPath, "src", imp)
 			fmt.Println("copying", imp)
+
+			if cmd.IsSet("dry") {
+				continue
+			}
+
+			exist, err = isDirExist(srcDir)
+			if err != nil {
+				return err
+			}
+			if !exist && cmd.IsSet("get") {
+				cmd := NewCommand("get").AddArguments(imp)
+				err = cmd.RunInDirPipeline("src", os.Stdout, os.Stderr)
+				if err != nil {
+					return err
+				}
+			}
+
 			err = CopyDir(srcDir, p, func(path string) bool {
 				return strings.HasPrefix(path, ".git")
 			})

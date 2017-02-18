@@ -45,11 +45,15 @@ This is an example project's directory.
 
 ### init
 
+Create the default directory structs.
+
 ```
 gop init
 ```
 
 ### ensure
+
+Auto copy dependencies from $GOPATH to local project directory.
 
 ```
 gop ensure
@@ -57,11 +61,15 @@ gop ensure
 
 ### status
 
+List all dependencies of this project and show the status.
+
 ```
 gop status
 ```
 
 ### add
+
+Add a package to this project.
 
 ```
 gop add <package>
@@ -69,11 +77,23 @@ gop add <package>
 
 ### rm
 
+Remove a package from this project.
+
 ```
 gop rm <package>
 ```
 
+### build
+
+Run `go build` on the src directory.
+
+```
+gop build
+```
+
 ### test
+
+Run `go test` on the src directory.
 
 ```
 gop test
