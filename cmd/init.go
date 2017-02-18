@@ -47,6 +47,7 @@ func runInit(ctx *cli.Context) error {
 			if err != nil {
 				return fmt.Errorf("create main file failed: %v", err)
 			}
+			return nil
 		}
 		return fmt.Errorf("os.State: %v", err)
 	}
