@@ -59,6 +59,14 @@ func runEnsure(cmd *cli.Context) error {
 		return err
 	}
 	for _, imp := range imports {
+		if IsGoRepoPath(imp) {
+			continue
+		}
+
+		if imp == "C" || strings.HasPrefix(imp, "../") || strings.HasPrefix(imp, "./") {
+			continue
+		}
+
 		// get parent package
 		imp, _ = util.NormalizeName(imp)
 

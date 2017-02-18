@@ -13,6 +13,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/lunny/gop/util"
 	"github.com/urfave/cli"
 )
 
@@ -47,7 +48,18 @@ func runStatus(cmd *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	for _, imp := range imports {
+	for i, imp := range imports {
+		var has bool
+		for j := 0; j < i; j++ {
+			if imports[j] == imp {
+				has = true
+				break
+			}
+		}
+		if has {
+			continue
+		}
+
 		// FIXME: imp only UNIX
 		p := filepath.Join(srcDir, imp)
 		exist, err := isDirExist(p)
@@ -225,7 +237,7 @@ func IsGoRepoPath(importPath string) bool {
 }
 
 var (
-	Debug = true
+	Debug = false
 )
 
 func isDirExist(dirName string) (bool, error) {
@@ -272,32 +284,44 @@ func ListImports(importPath, rootPath, srcPath, tags string, isTest bool) ([]str
 			continue
 		}
 
+		if name == "C" || strings.HasPrefix(name, "../") || strings.HasPrefix(name, "./") {
+			continue
+		}
+
 		exist, err := isDirExist(filepath.Join(rootPath, name))
 		if err != nil {
 			return nil, err
 		}
 
+		if Debug {
+			log.Printf("Found dependency: %s\n", name)
+		}
+
 		if exist {
 			imports = append(imports, name)
+
 			moreImports, err := ListImports("./"+name, rootPath, rootPath, tags, isTest)
 			if err != nil {
 				return nil, err
 			}
-			imports = append(imports, moreImports...)
-			continue
+			for _, mi := range moreImports {
+				pkgName, _ := util.NormalizeName(mi)
+				imports = append(imports, pkgName)
+			}
 		} else {
-			imports = append(imports, name)
+			pkgName, _ := util.NormalizeName(name)
+			imports = append(imports, pkgName)
+
 			oldGOPATH := os.Getenv("GOPATH")
 			moreImports, err := ListImports(name, filepath.Join(oldGOPATH, "src", name), filepath.Join(oldGOPATH, "src", name), tags, isTest)
 			if err != nil {
 				return nil, err
 			}
-			imports = append(imports, moreImports...)
+			for _, mi := range moreImports {
+				pkgName, _ := util.NormalizeName(mi)
+				imports = append(imports, pkgName)
+			}
 		}
-		if Debug {
-			log.Printf("Found dependency: %s\n", name)
-		}
-
 	}
 	return imports, nil
 }

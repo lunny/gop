@@ -39,36 +39,58 @@ func runAdd(ctx *cli.Context) error {
 		return errors.New("Not found GOPATH")
 	}
 
-	parentPkg, _ := util.NormalizeName(ctx.Args()[0])
-	absPkgPath := filepath.Join(globalGoPath, "src", parentPkg)
+	names := ctx.Args()
 
 	wd, err := os.Getwd()
 	if err != nil {
 		return err
 	}
 
-	dstPath := filepath.Join(wd, "src", parentPkg)
-	info, err := os.Stat(dstPath)
-	if err != nil {
-		if os.IsNotExist(err) {
+	for _, name := range names {
+		var absPkgPath, dstPath, parentPkg string
+
+		if strings.HasPrefix(name, "../") || filepath.IsAbs(name) {
+			parentPkg = name
+			var err error
+			absPkgPath, err = filepath.Abs(name)
+			if err != nil {
+				return err
+			}
+			dstPath = filepath.Join(wd, "src", filepath.Base(absPkgPath))
+		} else {
+			parentPkg, _ = util.NormalizeName(name)
+			absPkgPath = filepath.Join(globalGoPath, "src", parentPkg)
+			dstPath = filepath.Join(wd, "src", parentPkg)
+		}
+
+		info, err := os.Stat(dstPath)
+		if err != nil {
+			if !os.IsNotExist(err) {
+				return err
+			}
+
 			fmt.Println("copying", parentPkg)
-			return CopyDir(absPkgPath, dstPath, func(path string) bool {
+			err = CopyDir(absPkgPath, dstPath, func(path string) bool {
 				return strings.HasPrefix(path, ".git")
 			})
-		}
-		return err
-	}
+			if err != nil {
+				return err
+			}
+		} else if ctx.IsSet("update") {
+			if !info.IsDir() {
+				return fmt.Errorf("Dest dir %s is a file", dstPath)
+			}
 
-	if ctx.IsSet("update") {
-		if !info.IsDir() {
-			return fmt.Errorf("Dest dir %s is a file", dstPath)
+			fmt.Println("copying", parentPkg)
+			os.RemoveAll(dstPath)
+			err = CopyDir(absPkgPath, dstPath, func(path string) bool {
+				return strings.HasPrefix(path, ".git")
+			})
+			if err != nil {
+				return err
+			}
 		}
-
-		fmt.Println("copying", parentPkg)
-		os.RemoveAll(dstPath)
-		return CopyDir(absPkgPath, dstPath, func(path string) bool {
-			return strings.HasPrefix(path, ".git")
-		})
+		//fmt.Printf("Pkg %s is added already\n", parentPkg)
 	}
-	return fmt.Errorf("Pkg %s is added already", parentPkg)
+	return nil
 }
