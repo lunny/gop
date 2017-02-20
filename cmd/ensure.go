@@ -54,7 +54,7 @@ func runEnsure(cmd *cli.Context) error {
 	ctxt.GOPATH = globalGoPath
 	srcDir := filepath.Join(wd, "src")
 
-	imports, err := ListImports(".", srcDir, srcDir, "", false)
+	imports, err := ListImports(".", srcDir, srcDir, "", true)
 	if err != nil {
 		return err
 	}

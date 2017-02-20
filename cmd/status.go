@@ -44,7 +44,7 @@ func runStatus(cmd *cli.Context) error {
 	ctxt.GOPATH = globalGoPath
 	srcDir := filepath.Join(wd, "src")
 
-	imports, err := ListImports(".", srcDir, srcDir, "", false)
+	imports, err := ListImports(".", srcDir, srcDir, "", true)
 	if err != nil {
 		return err
 	}
@@ -313,7 +313,7 @@ func ListImports(importPath, rootPath, srcPath, tags string, isTest bool) ([]str
 			imports = append(imports, pkgName)
 
 			oldGOPATH := os.Getenv("GOPATH")
-			moreImports, err := ListImports(name, filepath.Join(oldGOPATH, "src", name), filepath.Join(oldGOPATH, "src", name), tags, isTest)
+			moreImports, err := ListImports(name, filepath.Join(oldGOPATH, "src", name), filepath.Join(oldGOPATH, "src", name), tags, false)
 			if err != nil {
 				return nil, err
 			}
