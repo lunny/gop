@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	Version = "0.1"
+	Version = "0.2.0627"
 )
 
 func main() {
@@ -30,8 +30,10 @@ func main() {
 		cmd.CmdStatus,
 		cmd.CmdAdd,
 		cmd.CmdRemove,
+		cmd.CmdRelease,
+		cmd.CmdRun,
 	}
-	app.Flags = append(app.Flags, []cli.Flag{}...)
+
 	err := app.Run(os.Args)
 	if err != nil {
 		log.Fatal(4, "Failed to run app with %s: %v", os.Args, err)

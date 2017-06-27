@@ -7,6 +7,7 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/urfave/cli"
@@ -22,7 +23,36 @@ var CmdBuild = cli.Command{
 }
 
 func runBuild(ctx *cli.Context) error {
-	cmd := NewCommand("build").AddArguments(ctx.Args()...)
+	wd, err := os.Getwd()
+	if err != nil {
+		return err
+	}
+
+	config.Name = filepath.Base(wd)
+	if err = loadConfig(filepath.Join(wd, "gop.yml")); err != nil {
+		return err
+	}
+
+	var args = ctx.Args()
+	var find = -1
+	for i, arg := range args {
+		if arg == "-o" {
+			find = i
+			break
+		}
+	}
+
+	if find > -1 {
+		if find < len(args)-1 {
+			config.Name = args[find+1]
+		} else {
+			args = append(args[:find], "-o", config.Name)
+		}
+	} else {
+		args = append(args, "-o", config.Name)
+	}
+
+	cmd := NewCommand("build").AddArguments(args...)
 	envs := os.Environ()
 	var gopathIdx = -1
 	for i, env := range envs {
@@ -30,11 +60,6 @@ func runBuild(ctx *cli.Context) error {
 			gopathIdx = i
 			break
 		}
-	}
-
-	wd, err := os.Getwd()
-	if err != nil {
-		return err
 	}
 
 	newGopath := fmt.Sprintf("GOPATH=%s", wd)
@@ -49,8 +74,6 @@ func runBuild(ctx *cli.Context) error {
 	if err != nil {
 		return err
 	}
-
-	// FIXME: move the build binary to bin/
 
 	return nil
 }

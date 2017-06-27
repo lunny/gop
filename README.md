@@ -26,6 +26,7 @@ This is an example project's directory.
 
 ```
 <projct root>
+├── gop.yml
 ├── bin
 └── src
     ├── github.com
@@ -39,6 +40,20 @@ This is an example project's directory.
     ├── main.go
     └── models
         └── models.go
+```
+
+## Gop.yml
+
+The project yml configuration file. This is an example.
+
+```yml
+name: gop
+assets:
+  - public
+  - templates
+  - config.ini
+  - key.pem
+  - cert.pem
 ```
 
 ## Command
