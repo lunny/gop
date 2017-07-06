@@ -6,6 +6,7 @@ package cmd
 
 import (
 	"os"
+	"runtime"
 
 	"path/filepath"
 
@@ -32,8 +33,13 @@ func runRun(ctx *cli.Context) error {
 		return err
 	}
 
+	var ext string
+	if runtime.GOOS == "windows" {
+		ext = ".exe"
+	}
+
 	cmd := Command{
-		name: filepath.Join(wd, "src", config.Name),
+		name: filepath.Join(wd, "src", config.Name+ext),
 		Env:  os.Environ(),
 	}
 

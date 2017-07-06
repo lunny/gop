@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 
 	"github.com/urfave/cli"
@@ -42,14 +43,19 @@ func runBuild(ctx *cli.Context) error {
 		}
 	}
 
+	var ext string
+	if runtime.GOOS == "windows" {
+		ext = ".exe"
+	}
+
 	if find > -1 {
 		if find < len(args)-1 {
 			config.Name = args[find+1]
 		} else {
-			args = append(args[:find], "-o", config.Name)
+			args = append(args[:find], "-o", config.Name+ext)
 		}
 	} else {
-		args = append(args, "-o", config.Name)
+		args = append(args, "-o", config.Name+ext)
 	}
 
 	cmd := NewCommand("build").AddArguments(args...)
