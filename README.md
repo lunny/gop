@@ -59,10 +59,12 @@ This is an example project's directory.
 The project yml configuration file. This is an example.
 
 ```yml
-name: gop
-assets:
-  - public
+targets:
+- name: myproject
+  dir: main
+  assets:
   - templates
+  - public
   - config.ini
   - key.pem
   - cert.pem
