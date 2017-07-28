@@ -1,6 +1,8 @@
 # GOP
 
-GOP is a project manangement tool for golang application projects which you can place it anywhere(not in the GOPATH). Also this means it's not go-getable. GOP copy all denpendencies to src directory and all application's source is also in this directory. 
+**Notice: We have changed the project structure and it isn't compitable with before. You have to change the old structure to new manually.**
+
+GOP is a project manangement tool for golang application projects which you can place it anywhere(not in the GOPATH). Also this means it's **not** go-getable. GOP copy all denpendencies to src/vendor directory and all application's source is also in this directory. 
 
 So a common process is below:
 
@@ -11,6 +13,11 @@ gop ensure
 gop build
 gop test
 ```
+
+## Features
+
+* GOPATH compitable
+* Multiple build targets support
 
 ## Installation
 
@@ -25,21 +32,26 @@ go get github.com/lunny/gop
 This is an example project's directory.
 
 ```
-<projct root>
+<project root>
 ├── gop.yml
 ├── bin
+├── doc
 └── src
-    ├── github.com
-    │   ├── go-xorm
-    │   │   ├── builder
-    │   │   ├── core
-    │   │   └── xorm
-    │   └── lunny
-    │       ├── log
-    │       └── tango
-    ├── main.go
-    └── models
-        └── models.go
+    ├── main
+    │   └── main.go
+    ├── models
+    │   └── models.go
+    ├── routes
+    │   └── routes.go
+    └── vendor
+        └── github.com
+            ├── go-xorm
+            │   ├── builder
+            │   ├── core
+            │   └── xorm
+            └── lunny
+                ├── log
+                └── tang o
 ```
 
 ## Gop.yml

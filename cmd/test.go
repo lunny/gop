@@ -7,6 +7,7 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/urfave/cli"
@@ -32,12 +33,27 @@ func runTest(ctx *cli.Context) error {
 		}
 	}
 
-	wd, err := os.Getwd()
+	level, projectRoot, err := analysisDirLevel()
 	if err != nil {
 		return err
 	}
 
-	newGopath := fmt.Sprintf("GOPATH=%s", wd)
+	if err = loadConfig(filepath.Join(projectRoot, "gop.yml")); err != nil {
+		return err
+	}
+
+	var args = ctx.Args()
+	var targetName string
+	if len(args) > 0 && !strings.HasPrefix(args[0], "-") {
+		targetName = args[0]
+		args = args[1:]
+	}
+
+	if err = analysisTarget(ctx, level, targetName, projectRoot); err != nil {
+		return err
+	}
+
+	newGopath := fmt.Sprintf("GOPATH=%s", projectRoot)
 	if gopathIdx > 0 {
 		envs[gopathIdx] = newGopath
 	} else {
@@ -45,7 +61,7 @@ func runTest(ctx *cli.Context) error {
 	}
 	cmd.Env = envs
 
-	err = cmd.RunInDirPipeline("src", os.Stdout, os.Stderr)
+	err = cmd.RunInDirPipeline(filepath.Join(projectRoot, "src", curTarget.Dir), os.Stdout, os.Stderr)
 	if err != nil {
 		return err
 	}

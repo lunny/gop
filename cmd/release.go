@@ -6,13 +6,11 @@ package cmd
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
 
 	"github.com/Unknwon/com"
-	"github.com/go-yaml/yaml"
 	"github.com/urfave/cli"
 )
 
@@ -25,40 +23,17 @@ var CmdRelease = cli.Command{
 	SkipFlagParsing: true,
 }
 
-type Config struct {
-	Name   string
-	Assets []string
-}
-
-var config Config
-
-func loadConfig(ymlPath string) error {
-	if com.IsExist(ymlPath) {
-		Println("find config file", ymlPath)
-		bs, err := ioutil.ReadFile(ymlPath)
-		if err != nil {
-			return err
-		}
-
-		err = yaml.Unmarshal(bs, &config)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
 func runRelease(ctx *cli.Context) error {
-	wd, err := os.Getwd()
+	_, projectRoot, err := analysisDirLevel()
 	if err != nil {
 		return err
 	}
 
-	config.Name = filepath.Base(wd)
-	if err = loadConfig(filepath.Join(wd, "gop.yml")); err != nil {
+	if err = loadConfig(filepath.Join(projectRoot, "gop.yml")); err != nil {
 		return err
 	}
 
+	var target = config.Targets[0]
 	var args = ctx.Args()
 	var find = -1
 	for i, arg := range args {
@@ -80,7 +55,7 @@ func runRelease(ctx *cli.Context) error {
 		}
 	}
 
-	args = append(args, "-o", filepath.Join(wd, "bin", config.Name))
+	args = append(args, "-o", filepath.Join(projectRoot, "bin", target.Name))
 	cmd := NewCommand("build").AddArguments(args...)
 	envs := os.Environ()
 	var gopathIdx = -1
@@ -91,7 +66,7 @@ func runRelease(ctx *cli.Context) error {
 		}
 	}
 
-	newGopath := fmt.Sprintf("GOPATH=%s", wd)
+	newGopath := fmt.Sprintf("GOPATH=%s", projectRoot)
 	if gopathIdx > 0 {
 		envs[gopathIdx] = newGopath
 	} else {
@@ -106,9 +81,9 @@ func runRelease(ctx *cli.Context) error {
 		return err
 	}
 
-	for _, asset := range config.Assets {
-		srcPath := filepath.Join(wd, "src", asset)
-		dstPath := filepath.Join(wd, "bin", asset)
+	for _, asset := range target.Assets {
+		srcPath := filepath.Join(projectRoot, "src", target.Dir, asset)
+		dstPath := filepath.Join(projectRoot, "bin", target.Dir, asset)
 		if com.IsDir(srcPath) {
 			os.RemoveAll(dstPath)
 			err = com.CopyDir(srcPath, dstPath)

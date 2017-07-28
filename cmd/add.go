@@ -29,23 +29,15 @@ var CmdAdd = cli.Command{
 	},
 }
 
+// add add one package to vendor
 func add(name, projPath, globalGoPath string, isUpdate bool) error {
-	var absPkgPath, dstPath, parentPkg string
-
-	if strings.HasPrefix(name, "../") || filepath.IsAbs(name) {
-		parentPkg = name
-		var err error
-		absPkgPath, err = filepath.Abs(name)
-		if err != nil {
-			return err
-		}
-		parentPkg = filepath.Base(absPkgPath)
-	} else {
-		parentPkg, _ = util.NormalizeName(name)
-		absPkgPath = filepath.Join(globalGoPath, "src", parentPkg)
+	if strings.HasPrefix(name, "../") || filepath.IsAbs(name) || strings.HasPrefix(name, "./") {
+		return errors.New("relative pkg and absolute pkg is not supported, only packages on GOPATH")
 	}
 
-	dstPath = filepath.Join(projPath, "src", parentPkg)
+	parentPkg, _ := util.NormalizeName(name)
+	absPkgPath := filepath.Join(globalGoPath, "src", parentPkg)
+	dstPath := filepath.Join(projPath, "src", "vendor", parentPkg)
 
 	info, err := os.Stat(dstPath)
 	if err != nil {
@@ -73,6 +65,8 @@ func add(name, projPath, globalGoPath string, isUpdate bool) error {
 		if err != nil {
 			return err
 		}
+	} else {
+		return fmt.Errorf("%s has been added", parentPkg)
 	}
 
 	imports, err := ListImports(parentPkg, absPkgPath, absPkgPath, "", false)
@@ -111,13 +105,13 @@ func runAdd(ctx *cli.Context) error {
 
 	names := ctx.Args()
 
-	wd, err := os.Getwd()
+	_, projectRoot, err := analysisDirLevel()
 	if err != nil {
 		return err
 	}
 
 	for _, name := range names {
-		if err = add(name, wd, globalGoPath, ctx.IsSet("update")); err != nil {
+		if err = add(name, projectRoot, globalGoPath, ctx.IsSet("update")); err != nil {
 			return err
 		}
 	}

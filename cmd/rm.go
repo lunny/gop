@@ -34,13 +34,14 @@ func runRemove(ctx *cli.Context) error {
 		return errors.New("You have to indicate more than one package")
 	}
 
-	parentPkg, _ := util.NormalizeName(ctx.Args()[0])
-	wd, err := os.Getwd()
+	_, projectRoot, err := analysisDirLevel()
 	if err != nil {
 		return err
 	}
 
-	dstPath := filepath.Join(wd, "src", parentPkg)
+	parentPkg, _ := util.NormalizeName(ctx.Args()[0])
+
+	dstPath := filepath.Join(projectRoot, "src", "vendor", parentPkg)
 	fmt.Println("removing", parentPkg)
 	os.RemoveAll(dstPath)
 

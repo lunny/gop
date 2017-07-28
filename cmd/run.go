@@ -28,7 +28,7 @@ func runRun(ctx *cli.Context) error {
 		return err
 	}
 
-	wd, err := os.Getwd()
+	_, projectRoot, err := analysisDirLevel()
 	if err != nil {
 		return err
 	}
@@ -39,11 +39,11 @@ func runRun(ctx *cli.Context) error {
 	}
 
 	cmd := Command{
-		name: filepath.Join(wd, "src", config.Name+ext),
+		name: filepath.Join(projectRoot, "src", curTarget.Dir, curTarget.Name+ext),
 		Env:  os.Environ(),
 	}
 
-	err = cmd.RunInDirPipeline(filepath.Join(wd, "src"), os.Stdout, os.Stderr)
+	err = cmd.RunInDirPipeline(filepath.Join(projectRoot, "src", curTarget.Dir), os.Stdout, os.Stderr)
 	if err != nil {
 		return err
 	}

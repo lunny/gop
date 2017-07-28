@@ -36,13 +36,28 @@ func runStatus(cmd *cli.Context) error {
 		return errors.New("Not found GOPATH")
 	}
 
-	wd, err := os.Getwd()
+	level, projectRoot, err := analysisDirLevel()
 	if err != nil {
 		return err
 	}
 
+	if err = loadConfig(filepath.Join(projectRoot, "gop.yml")); err != nil {
+		return err
+	}
+
+	var args = cmd.Args()
+	var targetName string
+	if len(args) > 0 && !strings.HasPrefix(args[0], "-") {
+		targetName = args[0]
+		args = args[1:]
+	}
+
+	if err = analysisTarget(cmd, level, targetName, projectRoot); err != nil {
+		return err
+	}
+
 	ctxt.GOPATH = globalGoPath
-	srcDir := filepath.Join(wd, "src")
+	srcDir := filepath.Join(projectRoot, "src", curTarget.Dir)
 
 	imports, err := ListImports(".", srcDir, srcDir, "", true)
 	if err != nil {

@@ -5,11 +5,14 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
 	"runtime"
 	"strings"
+
+	"github.com/Unknwon/com"
 
 	"github.com/urfave/cli"
 )
@@ -23,18 +26,80 @@ var CmdBuild = cli.Command{
 	SkipFlagParsing: true,
 }
 
+var curTarget *Target
+
+func analysisTarget(ctx *cli.Context, level int, targetName, projectRoot string) error {
+	if targetName == "" {
+		if level == dirLevelTarget {
+			wd, err := os.Getwd()
+			if err != nil {
+				return err
+			}
+
+			dirName := filepath.Base(wd)
+
+			for _, t := range config.Targets {
+				if t.Dir == dirName {
+					curTarget = &t
+					break
+				}
+			}
+
+			curTarget = &Target{
+				Name: dirName,
+				Dir:  dirName,
+			}
+		}
+		if curTarget == nil {
+			curTarget = &config.Targets[0]
+		}
+	} else {
+		for _, t := range config.Targets {
+			if t.Name == targetName {
+				curTarget = &t
+				break
+			}
+			if t.Dir == targetName {
+				curTarget = &t
+				break
+			}
+		}
+
+		if curTarget == nil {
+			if !com.IsExist(filepath.Join(projectRoot, "src", targetName)) {
+				return errors.New("unknow target")
+			}
+
+			curTarget = &Target{
+				Name: targetName,
+				Dir:  targetName,
+			}
+		}
+	}
+	return nil
+}
+
 func runBuild(ctx *cli.Context) error {
-	wd, err := os.Getwd()
+	level, projectRoot, err := analysisDirLevel()
 	if err != nil {
 		return err
 	}
 
-	config.Name = filepath.Base(wd)
-	if err = loadConfig(filepath.Join(wd, "gop.yml")); err != nil {
+	if err = loadConfig(filepath.Join(projectRoot, "gop.yml")); err != nil {
 		return err
 	}
 
 	var args = ctx.Args()
+	var targetName string
+	if len(args) > 0 && !strings.HasPrefix(args[0], "-") {
+		targetName = args[0]
+		args = args[1:]
+	}
+
+	if err = analysisTarget(ctx, level, targetName, projectRoot); err != nil {
+		return err
+	}
+
 	var find = -1
 	for i, arg := range args {
 		if arg == "-o" {
@@ -50,12 +115,12 @@ func runBuild(ctx *cli.Context) error {
 
 	if find > -1 {
 		if find < len(args)-1 {
-			config.Name = args[find+1]
+			curTarget.Name = args[find+1]
 		} else {
-			args = append(args[:find], "-o", config.Name+ext)
+			args = append(args[:find], "-o", curTarget.Name+ext)
 		}
 	} else {
-		args = append(args, "-o", config.Name+ext)
+		args = append(args, "-o", curTarget.Name+ext)
 	}
 
 	cmd := NewCommand("build").AddArguments(args...)
@@ -68,7 +133,7 @@ func runBuild(ctx *cli.Context) error {
 		}
 	}
 
-	newGopath := fmt.Sprintf("GOPATH=%s", wd)
+	newGopath := fmt.Sprintf("GOPATH=%s", projectRoot)
 	if gopathIdx > 0 {
 		envs[gopathIdx] = newGopath
 	} else {
@@ -76,7 +141,7 @@ func runBuild(ctx *cli.Context) error {
 	}
 	cmd.Env = envs
 
-	err = cmd.RunInDirPipeline("src", os.Stdout, os.Stderr)
+	err = cmd.RunInDirPipeline(filepath.Join(projectRoot, "src", curTarget.Dir), os.Stdout, os.Stderr)
 	if err != nil {
 		return err
 	}

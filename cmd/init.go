@@ -31,13 +31,15 @@ var CmdInit = cli.Command{
 }
 
 func runInit(ctx *cli.Context) error {
-	os.MkdirAll("src", os.ModePerm)
-	os.MkdirAll("bin", os.ModePerm)
-
 	wd, err := os.Getwd()
 	if err != nil {
 		return err
 	}
+
+	os.MkdirAll(filepath.Join(wd, "src"), os.ModePerm)
+	os.MkdirAll(filepath.Join(wd, "src", "vendor"), os.ModePerm)
+	os.MkdirAll(filepath.Join(wd, "src", "main"), os.ModePerm)
+	os.MkdirAll(filepath.Join(wd, "bin"), os.ModePerm)
 
 	ymlPath := filepath.Join(wd, "gop.yml")
 	_, err = os.Stat(ymlPath)
@@ -56,7 +58,7 @@ func runInit(ctx *cli.Context) error {
 		}
 	}
 
-	mainFile := filepath.Join(wd, "src", "main.go")
+	mainFile := filepath.Join(wd, "src", "main", "main.go")
 	_, err = os.Stat(mainFile)
 	if err != nil {
 		if os.IsNotExist(err) {
