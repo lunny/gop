@@ -14,6 +14,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/Unknwon/com"
 	"github.com/lunny/gop/util"
 	"github.com/urfave/cli"
 )
@@ -70,11 +71,15 @@ func runEnsure(cmd *cli.Context) error {
 	targetDir := filepath.Join(projectRoot, "src", curTarget.Dir)
 	vendorDir := filepath.Join(projectRoot, "src", "vendor")
 
-	imports, err := ListImports(".", targetDir, targetDir, "", true)
+	imports, err := ListImports(".", filepath.Join(projectRoot, "src"), targetDir, "", true)
 	if err != nil {
 		return err
 	}
 	for _, imp := range imports {
+		pkg := filepath.Join(projectRoot, "src", imp)
+		if com.IsExist(pkg) {
+			continue
+		}
 		if IsGoRepoPath(imp) {
 			continue
 		}

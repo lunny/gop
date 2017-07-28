@@ -13,6 +13,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/Unknwon/com"
 	"github.com/lunny/gop/util"
 	"github.com/urfave/cli"
 )
@@ -58,12 +59,18 @@ func runStatus(cmd *cli.Context) error {
 
 	ctxt.GOPATH = globalGoPath
 	srcDir := filepath.Join(projectRoot, "src", curTarget.Dir)
+	vendorDir := filepath.Join(projectRoot, "src", "vendor")
 
-	imports, err := ListImports(".", srcDir, srcDir, "", true)
+	imports, err := ListImports(".", filepath.Join(projectRoot, "src"), srcDir, "", true)
 	if err != nil {
 		return err
 	}
 	for i, imp := range imports {
+		pkg := filepath.Join(projectRoot, "src", imp)
+		if com.IsExist(pkg) {
+			continue
+		}
+
 		var has bool
 		for j := 0; j < i; j++ {
 			if imports[j] == imp {
@@ -76,7 +83,7 @@ func runStatus(cmd *cli.Context) error {
 		}
 
 		// FIXME: imp only UNIX
-		p := filepath.Join(srcDir, imp)
+		p := filepath.Join(vendorDir, imp)
 		exist, err := isDirExist(p)
 		if err != nil {
 			return err
