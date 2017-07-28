@@ -13,12 +13,19 @@ import (
 )
 
 const (
-	defaultMainFile = `
-package main
+	defaultMainFile = `package main
 
 func main() {
 		
 }
+`
+
+	defaultYaml = `targets:
+- name: %s
+  dir: main
+  assets:
+  - templates
+  - public
 `
 )
 
@@ -51,7 +58,7 @@ func runInit(ctx *cli.Context) error {
 			}
 			defer y.Close()
 
-			_, err = y.Write([]byte(fmt.Sprintf("name: %s\n", filepath.Base(wd))))
+			_, err = y.Write([]byte(fmt.Sprintf(defaultYaml, filepath.Base(wd))))
 			if err != nil {
 				return err
 			}

@@ -18,7 +18,7 @@ import (
 	"github.com/urfave/cli"
 )
 
-// CmdBuild represents
+// CmdEnsure represents
 var CmdEnsure = cli.Command{
 	Name:        "ensure",
 	Usage:       "Ensure all the dependencies in the src directory",
