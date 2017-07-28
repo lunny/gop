@@ -67,9 +67,10 @@ func runEnsure(cmd *cli.Context) error {
 	}
 
 	ctxt.GOPATH = globalGoPath
-	srcDir := filepath.Join(projectRoot, "src", curTarget.Dir)
+	targetDir := filepath.Join(projectRoot, "src", curTarget.Dir)
+	vendorDir := filepath.Join(projectRoot, "src", "vendor")
 
-	imports, err := ListImports(".", srcDir, srcDir, "", true)
+	imports, err := ListImports(".", targetDir, targetDir, "", true)
 	if err != nil {
 		return err
 	}
@@ -86,7 +87,7 @@ func runEnsure(cmd *cli.Context) error {
 		imp, _ = util.NormalizeName(imp)
 
 		// FIXME: imp only UNIX
-		p := filepath.Join(srcDir, imp)
+		p := filepath.Join(vendorDir, imp)
 		exist, err := isDirExist(p)
 		if err != nil {
 			return err

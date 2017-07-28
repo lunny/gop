@@ -108,6 +108,7 @@ var standardPath = map[string]bool{
 	"container/heap":      true,
 	"container/list":      true,
 	"container/ring":      true,
+	"context":             true,
 	"crypto":              true,
 	"crypto/aes":          true,
 	"crypto/cipher":       true,
