@@ -18,10 +18,11 @@ gop test
 
 * GOPATH compitable
 * Multiple build targets support
+* Put your projects out of global GOPATH
 
 ## Installation
 
-Please ensure you have install the `go` command, GOP  will invoke it on building or testing
+Please ensure you have installed the `go` command, GOP will invoke it on building or testing
 
 ```
 go get github.com/lunny/gop
