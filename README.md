@@ -120,10 +120,26 @@ Run `go build` on the src directory.
 gop build
 ```
 
+### run
+
+Run `go run` on the src directory.
+
+```
+gop run
+```
+
 ### test
 
 Run `go test` on the src directory.
 
 ```
 gop test
+```
+
+### release
+
+Run `go release` on the src directory.
+
+```
+gop release
 ```
