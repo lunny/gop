@@ -1,5 +1,7 @@
 # GOP
 
+[简体中文](README_ZH.md)
+
 **Notice: We have changed the project structure and it isn't compitable with before. You have to change the old structure to new manually.**
 
 GOP is a project manangement tool for golang application projects which you can place it anywhere(not in the GOPATH). Also this means it's **not** go-getable. GOP copy all denpendencies to src/vendor directory and all application's source is also in this directory. 
@@ -52,7 +54,7 @@ This is an example project's directory.
             │   └── xorm
             └── lunny
                 ├── log
-                └── tang o
+                └── tango
 ```
 
 ## Gop.yml
@@ -61,7 +63,7 @@ The project yml configuration file. This is an example.
 
 ```yml
 targets:
-- name: myproject
+- name: myproject1
   dir: main
   assets:
   - templates
@@ -69,6 +71,12 @@ targets:
   - config.ini
   - key.pem
   - cert.pem
+- name: myproject2
+  dir: web
+  assets:
+  - templates
+  - public
+  - config.ini
 ```
 
 ## Command
@@ -86,7 +94,7 @@ gop init
 Auto copy dependencies from $GOPATH to local project directory.
 
 ```
-gop ensure
+gop ensure [target_name]
 ```
 
 ### status
@@ -94,7 +102,7 @@ gop ensure
 List all dependencies of this project and show the status.
 
 ```
-gop status
+gop status [target_name]
 ```
 
 ### add
@@ -118,7 +126,7 @@ gop rm <package>
 Run `go build` on the src directory.
 
 ```
-gop build
+gop build [target_name]
 ```
 
 ### run
@@ -126,7 +134,7 @@ gop build
 Run `go run` on the src directory.
 
 ```
-gop run
+gop run [target_name]
 ```
 
 ### test
@@ -134,7 +142,7 @@ gop run
 Run `go test` on the src directory.
 
 ```
-gop test
+gop test [target_name]
 ```
 
 ### release
@@ -142,5 +150,5 @@ gop test
 Run `go release` on the src directory.
 
 ```
-gop release
+gop release [target_name]
 ```
