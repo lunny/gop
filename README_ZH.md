@@ -61,7 +61,7 @@ go get github.com/lunny/gop
 
 ## Gop.yml
 
-工程配置文件，必须存在并且放在和src平级。
+工程配置文件，必须存在并且放在和src平级。如果你没有定义任何目标，默认的目标将是 src/main， 目标名是工程名。
 
 ```yml
 targets:

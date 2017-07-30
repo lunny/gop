@@ -59,7 +59,7 @@ This is an example project's directory.
 
 ## Gop.yml
 
-The project yml configuration file. This is an example.
+The project yml configuration file. This is an example. Of course, if you didn't define any target, the default target is src/main and the target name is the project name.
 
 ```yml
 targets:
