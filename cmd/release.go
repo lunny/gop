@@ -55,7 +55,7 @@ func runRelease(ctx *cli.Context) error {
 		}
 	}
 
-	args = append(args, "-o", filepath.Join(projectRoot, "bin", target.Name))
+	args = append(args, "-o", filepath.Join(projectRoot, "bin", target.Name, target.Name))
 	cmd := NewCommand("build").AddArguments(args...)
 	envs := os.Environ()
 	var gopathIdx = -1
@@ -76,14 +76,14 @@ func runRelease(ctx *cli.Context) error {
 
 	Println(cmd)
 
-	err = cmd.RunInDirPipeline("src", os.Stdout, os.Stderr)
+	err = cmd.RunInDirPipeline(filepath.Join(projectRoot, "src", target.Dir), os.Stdout, os.Stderr)
 	if err != nil {
 		return err
 	}
 
 	for _, asset := range target.Assets {
 		srcPath := filepath.Join(projectRoot, "src", target.Dir, asset)
-		dstPath := filepath.Join(projectRoot, "bin", target.Dir, asset)
+		dstPath := filepath.Join(projectRoot, "bin", target.Name, asset)
 		if com.IsDir(srcPath) {
 			os.RemoveAll(dstPath)
 			err = com.CopyDir(srcPath, dstPath)
