@@ -34,7 +34,111 @@ var CmdEnsure = cli.Command{
 			Name:  "get, g",
 			Usage: "call go get to download the package if package is not in GOPATH",
 		},
+		cli.BoolFlag{
+			Name:  "update, u",
+			Usage: "call go get -u to update the package if package is exist in GOPATH",
+		},
 	},
+}
+
+var updatedPackage = make(map[string]struct{})
+
+func ensure(cmd *cli.Context, globalGoPath, projectRoot, targetDir string) error {
+	vendorDir := filepath.Join(projectRoot, "src", "vendor")
+	imports, err := ListImports(".", filepath.Join(projectRoot, "src"), targetDir, "", true)
+	if err != nil {
+		return err
+	}
+	for _, imp := range imports {
+		pkg := filepath.Join(projectRoot, "src", imp)
+		if com.IsExist(pkg) {
+			continue
+		}
+		if IsGoRepoPath(imp) {
+			continue
+		}
+
+		if imp == "C" || strings.HasPrefix(imp, "../") || strings.HasPrefix(imp, "./") {
+			continue
+		}
+
+		// get parent package
+		imp, _ = util.NormalizeName(imp)
+
+		// package dir
+		srcDir := filepath.Join(globalGoPath, "src", imp)
+		// FIXME: dry will lost some packages with -g or -u
+		if cmd.IsSet("dry") {
+			fmt.Println("Dry copying", imp)
+			continue
+		}
+
+		// FIXME: imp only UNIX
+		dstDir := filepath.Join(vendorDir, imp)
+
+		if cmd.IsSet("update") {
+			if _, ok := updatedPackage[imp]; ok {
+				continue
+			}
+
+			fmt.Println("Downloading", imp)
+			cmdGet := NewCommand("get").AddArguments("-u", imp)
+			err = cmdGet.RunInDirPipeline("src", os.Stdout, os.Stderr)
+			if err != nil {
+				return err
+			}
+
+			fmt.Println("Copying", imp)
+			os.RemoveAll(dstDir)
+			err = CopyDir(srcDir, dstDir, func(path string) bool {
+				return strings.HasPrefix(path, ".git")
+			})
+			if err != nil {
+				return err
+			}
+
+			updatedPackage[imp] = struct{}{}
+
+			return ensure(cmd, globalGoPath, projectRoot, targetDir)
+		}
+
+		exist, err := isDirExist(dstDir)
+		if err != nil {
+			return err
+		}
+
+		if !exist {
+			exist, err = isDirExist(srcDir)
+			if err != nil {
+				return err
+			}
+			if !exist {
+				if cmd.IsSet("get") {
+					fmt.Println("Downloading", imp)
+					cmdGet := NewCommand("get").AddArguments(imp)
+					err = cmdGet.RunInDirPipeline("src", os.Stdout, os.Stderr)
+					if err != nil {
+						return err
+					}
+
+					// scan the package dependencies again since the new package added
+					return ensure(cmd, globalGoPath, projectRoot, targetDir)
+				}
+
+				fmt.Printf("Package %s not found on $GOPATH, please use -g option or go get at first\n", imp)
+				return nil
+			}
+
+			fmt.Println("Copying", imp)
+			err = CopyDir(srcDir, dstDir, func(path string) bool {
+				return strings.HasPrefix(path, ".git")
+			})
+			if err != nil {
+				return err
+			}
+		}
+	}
+	return nil
 }
 
 func runEnsure(cmd *cli.Context) error {
@@ -69,67 +173,8 @@ func runEnsure(cmd *cli.Context) error {
 
 	ctxt.GOPATH = globalGoPath
 	targetDir := filepath.Join(projectRoot, "src", curTarget.Dir)
-	vendorDir := filepath.Join(projectRoot, "src", "vendor")
 
-	imports, err := ListImports(".", filepath.Join(projectRoot, "src"), targetDir, "", true)
-	if err != nil {
-		return err
-	}
-	for _, imp := range imports {
-		pkg := filepath.Join(projectRoot, "src", imp)
-		if com.IsExist(pkg) {
-			continue
-		}
-		if IsGoRepoPath(imp) {
-			continue
-		}
-
-		if imp == "C" || strings.HasPrefix(imp, "../") || strings.HasPrefix(imp, "./") {
-			continue
-		}
-
-		// get parent package
-		imp, _ = util.NormalizeName(imp)
-
-		// FIXME: imp only UNIX
-		p := filepath.Join(vendorDir, imp)
-		exist, err := isDirExist(p)
-		if err != nil {
-			return err
-		}
-		if exist {
-			// FIXME: check if need to update
-		} else {
-			// copy data from GOPATH
-			srcDir := filepath.Join(globalGoPath, "src", imp)
-			fmt.Println("copying", imp)
-
-			if cmd.IsSet("dry") {
-				continue
-			}
-
-			exist, err = isDirExist(srcDir)
-			if err != nil {
-				return err
-			}
-			if !exist && cmd.IsSet("get") {
-				cmd := NewCommand("get").AddArguments(imp)
-				err = cmd.RunInDirPipeline("src", os.Stdout, os.Stderr)
-				if err != nil {
-					return err
-				}
-			}
-
-			err = CopyDir(srcDir, p, func(path string) bool {
-				return strings.HasPrefix(path, ".git")
-			})
-			if err != nil {
-				return err
-			}
-		}
-	}
-
-	return nil
+	return ensure(cmd, globalGoPath, projectRoot, targetDir)
 }
 
 // IsDir returns true if given path is a directory,

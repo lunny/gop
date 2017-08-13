@@ -95,10 +95,10 @@ gop init
 
 ### ensure
 
-自动从全局 GOPATH 拷贝所需要的依赖项到 src/vendor 目录下
+自动从全局 GOPATH 拷贝所需要的依赖项到 src/vendor 目录下。`-g` 参数将会自动调用 `go get <package>` 下载不在全局 `GOPATH` 中的包并且拷贝到 `vendor` 下。 `-u` 则总是调用 `go get <package>` 更新每一个依赖包并且拷贝到 `vendor` 下。
 
 ```
-gop ensure [target_name]
+gop ensure [-g|-u] [target_name]
 ```
 
 ### status
@@ -111,10 +111,10 @@ gop status [target_name]
 
 ### add
 
-从 GOPATH 中拷贝指定的依赖包到 vendor 目录下。
+从 GOPATH 中拷贝指定的依赖包到 vendor 目录下。`-u` 将会覆盖原先存在 `vendor` 下面的包。
 
 ```
-gop add <package>
+gop add [-u] <package>
 ```
 
 ### rm

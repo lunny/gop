@@ -91,10 +91,10 @@ gop init
 
 ### ensure
 
-Auto copy dependencies from $GOPATH to local project directory.
+Auto copy dependencies from $GOPATH to local project directory. `-g` will let you automatically call `go get <package>` when the package is missing on `GOPATH`. `-u` will always `go get <package>` on all the dependencies and copy them to `vendor`.
 
 ```
-gop ensure [target_name]
+gop ensure [-g|-u] [target_name]
 ```
 
 ### status
@@ -107,10 +107,10 @@ gop status [target_name]
 
 ### add
 
-Add a package to this project.
+Add a package to this project. `-u` will override the package dir on `vendor`.
 
 ```
-gop add <package>
+gop add [-u] <package>
 ```
 
 ### rm

@@ -45,7 +45,7 @@ func add(name, projPath, globalGoPath string, isUpdate bool) error {
 			return err
 		}
 
-		fmt.Println("copying", parentPkg)
+		fmt.Println("Copying", parentPkg)
 		err = CopyDir(absPkgPath, dstPath, func(path string) bool {
 			return strings.HasPrefix(path, ".git")
 		})
@@ -57,7 +57,7 @@ func add(name, projPath, globalGoPath string, isUpdate bool) error {
 			return fmt.Errorf("Dest dir %s is a file", dstPath)
 		}
 
-		fmt.Println("copying", parentPkg)
+		fmt.Println("Copying", parentPkg)
 		os.RemoveAll(dstPath)
 		err = CopyDir(absPkgPath, dstPath, func(path string) bool {
 			return strings.HasPrefix(path, ".git")
