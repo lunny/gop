@@ -66,7 +66,7 @@ func add(name, projPath, globalGoPath string, isUpdate bool) error {
 			return err
 		}
 	} else {
-		return fmt.Errorf("%s has been added", parentPkg)
+		return nil
 	}
 
 	imports, err := ListImports(parentPkg, absPkgPath, absPkgPath, "", false)
