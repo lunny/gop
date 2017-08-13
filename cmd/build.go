@@ -45,8 +45,13 @@ func analysisTarget(ctx *cli.Context, level int, targetName, projectRoot string)
 				}
 			}
 
+			var name = dirName
+			if dirName == "main" {
+				name = filepath.Base(projectRoot)
+			}
+
 			curTarget = &Target{
-				Name: dirName,
+				Name: name,
 				Dir:  dirName,
 			}
 		}
