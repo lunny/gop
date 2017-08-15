@@ -161,3 +161,4 @@ gop release [target_name]
 * [ ] `Go generate` 命令支持
 * [ ] 改进对库编译的支持
 * [ ] `gop run` 支持实时运行
+* [ ] 支持在 `GOPATH` 目录内运行

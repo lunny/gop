@@ -157,3 +157,4 @@ gop release [target_name]
 * [ ] `Go generate` support before calling `gop build` or other command
 * [ ] Improve bianry package building support
 * [ ] Live support for `gop run`
+* [ ] Support run `gop` in `GOPATH`
