@@ -14,13 +14,13 @@ import (
 )
 
 const (
-	Version = "0.4.0813"
+	Version = "0.4.0815"
 )
 
 func main() {
 	app := cli.NewApp()
 	app.Name = "Gop"
-	app.Usage = "A project manangement tool for golang application projects"
+	app.Usage = "Build golang applications out of GOPATH"
 	app.Version = Version
 	app.Commands = []cli.Command{
 		cmd.CmdInit,

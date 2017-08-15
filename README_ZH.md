@@ -2,16 +2,14 @@
 
 [English](README.md)
 
-**注意：从v0.2到v0.3，目录结构已经完全改变并且不兼容，请手动进行迁移更改。**
-
-GOP 是一个专为Golang应用开发的工程管理工具，通过这个工具你可以将你的工程放在任何地方（在GOPATH之外）。当然他肯定不支持Go Get了。GOP 会将所有的依赖项拷贝到 src/vendor 目录下，应用本身的源代码也在 src 下。
+GOP 是一个专为在GOPATH之外的Go应用开发的管理工具。当然他肯定不支持`Go Get`了。GOP 会将所有的依赖项拷贝到 `src/vendor` 目录下，应用本身的源代码也在 `src` 下。
 
 一个通常的使用过程如下：
 
 ```
 git clone xxx@mydata.com:bac/aaa.git
 cd aaa
-gop ensure
+gop ensure -g
 gop build
 gop test
 ```
@@ -156,3 +154,10 @@ gop test [target_name]
 ```
 gop release [target_name]
 ```
+
+## TODO
+
+* [ ] 依赖项版本支持
+* [ ] `Go generate` 命令支持
+* [ ] 改进对库编译的支持
+* [ ] `gop run` 支持实时运行

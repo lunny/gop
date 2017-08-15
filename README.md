@@ -2,16 +2,14 @@
 
 [简体中文](README_ZH.md)
 
-**Notice: We have changed the project structure and it isn't compitable with before. You have to change the old structure to new manually.**
+GOP is a project manangement tool for building your golang applications out of GOPATH. Also this means it's **not** go-getable. GOP copy all denpendencies to `src/vendor` directory and all application's source is also in this directory. 
 
-GOP is a project manangement tool for golang application projects which you can place it anywhere(not in the GOPATH). Also this means it's **not** go-getable. GOP copy all denpendencies to src/vendor directory and all application's source is also in this directory. 
-
-So a common process is below:
+A normal process using gop is below:
 
 ```
 git clone xxx@mydata.com:bac/aaa.git
 cd aaa
-gop ensure
+gop ensure -g
 gop build
 gop test
 ```
@@ -152,3 +150,10 @@ Run `go release` on the src directory.
 ```
 gop release [target_name]
 ```
+
+## TODO
+
+* [ ] Versions support, specify a dependency package verison
+* [ ] `Go generate` support before calling `gop build` or other command
+* [ ] Improve bianry package building support
+* [ ] Live support for `gop run`

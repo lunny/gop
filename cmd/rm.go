@@ -10,28 +10,20 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/lunny/gop/util"
 	"github.com/urfave/cli"
 )
 
-// CmdInit represents
+// CmdRemove represents
 var CmdRemove = cli.Command{
 	Name:        "rm",
 	Usage:       "remove a dependency",
 	Description: `remove a dependency`,
 	Action:      runRemove,
-	/*Flags: []cli.Flag{
-		cli.StringFlag{
-			Name:  "force, -f",
-			Value: "",
-			Usage: "rm",
-		},
-	},*/
 }
 
 func runRemove(ctx *cli.Context) error {
 	if len(ctx.Args()) <= 0 {
-		return errors.New("You have to indicate more than one package")
+		return errors.New("No package to be removed")
 	}
 
 	_, projectRoot, err := analysisDirLevel()
@@ -39,11 +31,11 @@ func runRemove(ctx *cli.Context) error {
 		return err
 	}
 
-	parentPkg, _ := util.NormalizeName(ctx.Args()[0])
-
-	dstPath := filepath.Join(projectRoot, "src", "vendor", parentPkg)
-	fmt.Println("removing", parentPkg)
-	os.RemoveAll(dstPath)
+	for _, pkg := range ctx.Args() {
+		dstPath := filepath.Join(projectRoot, "src", "vendor", pkg)
+		fmt.Println("removing", pkg)
+		os.RemoveAll(dstPath)
+	}
 
 	return nil
 }
