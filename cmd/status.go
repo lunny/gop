@@ -53,7 +53,7 @@ func runStatus(cmd *cli.Context) error {
 		args = args[1:]
 	}
 
-	if err = analysisTarget(cmd, level, targetName, projectRoot); err != nil {
+	if err = analysisTarget(level, targetName, projectRoot); err != nil {
 		return err
 	}
 

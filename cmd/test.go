@@ -49,7 +49,7 @@ func runTest(ctx *cli.Context) error {
 		args = args[1:]
 	}
 
-	if err = analysisTarget(ctx, level, targetName, projectRoot); err != nil {
+	if err = analysisTarget(level, targetName, projectRoot); err != nil {
 		return err
 	}
 

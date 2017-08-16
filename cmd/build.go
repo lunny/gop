@@ -28,7 +28,7 @@ var CmdBuild = cli.Command{
 
 var curTarget *Target
 
-func analysisTarget(ctx *cli.Context, level int, targetName, projectRoot string) error {
+func analysisTarget(level int, targetName, projectRoot string) error {
 	if targetName == "" {
 		if level == dirLevelTarget {
 			wd, err := os.Getwd()
@@ -84,7 +84,7 @@ func analysisTarget(ctx *cli.Context, level int, targetName, projectRoot string)
 	return nil
 }
 
-func runBuild(ctx *cli.Context) error {
+func runBuildNoCtx(args []string) error {
 	level, projectRoot, err := analysisDirLevel()
 	if err != nil {
 		return err
@@ -94,14 +94,13 @@ func runBuild(ctx *cli.Context) error {
 		return err
 	}
 
-	var args = ctx.Args()
 	var targetName string
 	if len(args) > 0 && !strings.HasPrefix(args[0], "-") {
 		targetName = args[0]
 		args = args[1:]
 	}
 
-	if err = analysisTarget(ctx, level, targetName, projectRoot); err != nil {
+	if err = analysisTarget(level, targetName, projectRoot); err != nil {
 		return err
 	}
 
@@ -152,4 +151,8 @@ func runBuild(ctx *cli.Context) error {
 	}
 
 	return nil
+}
+
+func runBuild(ctx *cli.Context) error {
+	return runBuildNoCtx(ctx.Args())
 }
