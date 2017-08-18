@@ -22,7 +22,7 @@ gop test
 
 ## 安装
 
-情确保您能正常运行Go命令，GOP 将依赖 Go 命令编译和测试
+请确保您能正常运行Go命令，GOP 将依赖 Go 命令编译和测试
 
 ```
 go get github.com/lunny/gop
