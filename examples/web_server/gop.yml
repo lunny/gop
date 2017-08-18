@@ -1,0 +1,6 @@
+targets:
+- name: web_server
+  dir: main
+  assets:
+  - templates
+  - public

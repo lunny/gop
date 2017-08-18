@@ -1,0 +1,16 @@
+2015/11/24 22:25:03.115367 [Info] [github.com/lunny/log] filewriter_test.go:16 test
+2015/11/24 22:25:03.115641 [Warn] [github.com/lunny/log] filewriter_test.go:18 ssss
+2015/11/24 22:25:03.115955 [Debug] [github.com/lunny/log] logext_test.go:15 Debug: foo
+2015/11/24 22:25:03.116004 [Debug] [github.com/lunny/log] logext_test.go:16 Debug: foo
+2015/11/24 22:25:03.116019 [Info] [github.com/lunny/log] logext_test.go:18 Info: foo
+2015/11/24 22:25:03.116033 [Info] [github.com/lunny/log] logext_test.go:19 Info: foo
+2015/11/24 22:25:03.116046 [Warn] [github.com/lunny/log] logext_test.go:21 Warn: foo
+2015/11/24 22:25:03.116060 [Warn] [github.com/lunny/log] logext_test.go:22 Warn: foo
+2015/11/24 22:25:03.116074 [Error] [github.com/lunny/log] logext_test.go:24 Error: foo
+2015/11/24 22:25:03.116087 [Error] [github.com/lunny/log] logext_test.go:25 Error: foo
+2015/11/24 22:25:03.116102 [Info] [github.com/lunny/log] logext_test.go:32 Info: foo
+2015/11/24 22:25:03.116116 [Info] [github.com/lunny/log] logext_test.go:33 Info: foo
+2015/11/24 22:25:03.116128 [Warn] [github.com/lunny/log] logext_test.go:35 Warn: foo
+2015/11/24 22:25:03.116140 [Warn] [github.com/lunny/log] logext_test.go:36 Warn: foo
+2015/11/24 22:25:03.116151 [Error] [github.com/lunny/log] logext_test.go:38 Error: foo
+2015/11/24 22:25:03.116196 [Error] [github.com/lunny/log] logext_test.go:39 Error: foo
