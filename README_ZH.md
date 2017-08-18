@@ -2,6 +2,8 @@
 
 [English](README.md)
 
+[![CircleCI](https://circleci.com/gh/lunny/tango.svg?style=shield)](https://circleci.com/gh/lunny/tango)
+
 GOP 是一个专为在GOPATH之外的Go应用开发的管理工具。当然他肯定不支持`Go Get`了。GOP 会将所有的依赖项拷贝到 `src/vendor` 目录下，应用本身的源代码也在 `src` 下。
 
 一个通常的使用过程如下：
