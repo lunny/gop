@@ -50,3 +50,37 @@ func TestInit(t *testing.T) {
 	err = runCommand(CmdStatus, filepath.Join(tmpDir, "src"))
 	assert.NoError(t, err)
 }
+
+func TestAddAndRm(t *testing.T) {
+	tmpDir := os.TempDir()
+	err := runCommand(CmdInit, tmpDir)
+	assert.NoError(t, err)
+	assert.True(t, com.IsExist(filepath.Join(tmpDir, "src")))
+	assert.True(t, com.IsExist(filepath.Join(tmpDir, "src", "main")))
+	assert.True(t, com.IsExist(filepath.Join(tmpDir, "src", "vendor")))
+	assert.True(t, com.IsExist(filepath.Join(tmpDir, "src", "main", "main.go")))
+	assert.True(t, com.IsExist(filepath.Join(tmpDir, "gop.yml")))
+
+	cmdGet := NewCommand("get", "github.com/lunny/tango")
+	_, err = cmdGet.Run()
+	assert.NoError(t, err)
+
+	err = runCommand(CmdAdd, filepath.Join(tmpDir, "src"), "github.com/lunny/tango")
+	assert.NoError(t, err)
+	assert.True(t, com.IsExist(filepath.Join(tmpDir, "src", "vendor", "github.com", "lunny", "tango")))
+	assert.True(t, com.IsExist(filepath.Join(tmpDir, "src", "vendor", "github.com", "lunny", "log")))
+
+	err = runCommand(CmdRemove, filepath.Join(tmpDir, "src"), "github.com/lunny/tango")
+	assert.NoError(t, err)
+
+	assert.True(t, com.IsExist(filepath.Join(tmpDir, "src", "vendor", "github.com", "lunny")))
+	assert.False(t, com.IsExist(filepath.Join(tmpDir, "src", "vendor", "github.com", "lunny", "tango")))
+	assert.True(t, com.IsExist(filepath.Join(tmpDir, "src", "vendor", "github.com", "lunny", "log")))
+
+	err = runCommand(CmdRemove, filepath.Join(tmpDir, "src"), "github.com/lunny/log")
+	assert.NoError(t, err)
+
+	assert.True(t, com.IsExist(filepath.Join(tmpDir, "src", "vendor", "github.com", "lunny")))
+	assert.False(t, com.IsExist(filepath.Join(tmpDir, "src", "vendor", "github.com", "lunny", "tango")))
+	assert.False(t, com.IsExist(filepath.Join(tmpDir, "src", "vendor", "github.com", "lunny", "log")))
+}
