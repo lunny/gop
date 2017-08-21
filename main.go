@@ -5,6 +5,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
 
@@ -34,7 +35,7 @@ func main() {
 		cmd.CmdRelease,
 		cmd.CmdRun,
 	}
-
+	fmt.Println(os.Args)
 	err := app.Run(os.Args)
 	if err != nil {
 		log.Fatal(4, "Failed to run app with %s: %v", os.Args, err)
