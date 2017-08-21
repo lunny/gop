@@ -2,7 +2,8 @@
 
 [简体中文](README_ZH.md)
 
-[![CircleCI](https://circleci.com/gh/lunny/tango.svg?style=shield)](https://circleci.com/gh/lunny/tango)
+[![CircleCI](https://circleci.com/gh/lunny/gop.svg?style=shield)](https://circleci.com/gh/lunny/gop) [![codecov](https://codecov.io/gh/lunny/gop/branch/master/graph/badge.svg)](https://codecov.io/gh/lunny/gop)
+[![](https://goreportcard.com/badge/github.com/lunny/gop)](https://goreportcard.com/report/github.com/lunny/gop) 
 
 GOP is a project manangement tool for building your golang applications out of GOPATH. Also this means it's **not** go-getable. GOP copy all denpendencies to `src/vendor` directory and all application's source is also in this directory. 
 
