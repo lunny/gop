@@ -15,7 +15,7 @@ A normal process using gop is below:
 
 Features
 
-1. GOPATH compitable
+1. GOPATH compatible
 2. Multiple build targets support
 3. Put your projects out of global GOPATH
 

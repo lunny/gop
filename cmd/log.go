@@ -10,14 +10,14 @@ var (
 	showLog bool
 )
 
-// Println println content accroding the flag
+// Println println content according the flag
 func Println(a ...interface{}) {
 	if showLog {
 		fmt.Println(a...)
 	}
 }
 
-// Printf printf content accroding the flag
+// Printf printf content according the flag
 func Printf(format string, a ...interface{}) {
 	if showLog {
 		fmt.Printf(format, a...)
