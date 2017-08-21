@@ -39,6 +39,11 @@ func add(name, projPath, globalGoPath string, isUpdate bool) error {
 	absPkgPath := filepath.Join(globalGoPath, "src", parentPkg)
 	dstPath := filepath.Join(projPath, "src", "vendor", parentPkg)
 
+	_, err := os.Stat(absPkgPath)
+	if err != nil {
+		return err
+	}
+
 	info, err := os.Stat(dstPath)
 	if err != nil {
 		if !os.IsNotExist(err) {
