@@ -3,6 +3,7 @@ package util
 import "strings"
 
 var (
+	// GoGetSources enumerates all the sources supported
 	GoGetSources = map[string]int{
 		"github.com":      3,
 		"golang.org":      3,

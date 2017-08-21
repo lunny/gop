@@ -23,7 +23,6 @@ var CmdTest = cli.Command{
 }
 
 func runTest(ctx *cli.Context) error {
-	cmd := NewCommand("test").AddArguments(ctx.Args()...)
 	envs := os.Environ()
 	var gopathIdx = -1
 	for i, env := range envs {
@@ -59,8 +58,9 @@ func runTest(ctx *cli.Context) error {
 	} else {
 		envs = append(envs, newGopath)
 	}
-	cmd.Env = envs
 
+	cmd := NewCommand("test").AddArguments(args...)
+	cmd.Env = envs
 	err = cmd.RunInDirPipeline(filepath.Join(projectRoot, "src", curTarget.Dir), os.Stdout, os.Stderr)
 	if err != nil {
 		return err

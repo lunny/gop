@@ -164,7 +164,6 @@ func runEnsure(cmd *cli.Context) error {
 	var targetName string
 	if len(args) > 0 && !strings.HasPrefix(args[0], "-") {
 		targetName = args[0]
-		args = args[1:]
 	}
 
 	if err = analysisTarget(level, targetName, projectRoot); err != nil {

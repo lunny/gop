@@ -50,7 +50,6 @@ func runStatus(cmd *cli.Context) error {
 	var targetName string
 	if len(args) > 0 && !strings.HasPrefix(args[0], "-") {
 		targetName = args[0]
-		args = args[1:]
 	}
 
 	if err = analysisTarget(level, targetName, projectRoot); err != nil {
@@ -260,6 +259,7 @@ func IsGoRepoPath(importPath string) bool {
 }
 
 var (
+	// Debug indicated whether it is debug mode
 	Debug = false
 )
 
@@ -277,6 +277,7 @@ func isDirExist(dirName string) (bool, error) {
 	return true, nil
 }
 
+// ListImports list all the dependencies packages name
 func ListImports(importPath, rootPath, srcPath, tags string, isTest bool) ([]string, error) {
 	oldGOPATH := os.Getenv("GOPATH")
 	ctxt := build.Default

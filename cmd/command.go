@@ -19,20 +19,24 @@ var (
 	GlobalCommandArgs []string
 )
 
+// ErrExecTimeout error of executing timed out
 type ErrExecTimeout struct {
 	Timeout time.Duration // seconds
 	Command *Command
 }
 
+// Error implement error interface
 func (e ErrExecTimeout) Error() string {
 	return "timeout failed"
 }
 
+// ConcatenateError describes the error of concate
 type ConcatenateError struct {
 	Err    error
 	Reason string
 }
 
+// Error implement error interface
 func (e ConcatenateError) Error() string {
 	return "concatenate error"
 }
@@ -44,6 +48,7 @@ type Command struct {
 	Env  []string
 }
 
+// String implement stringer interface
 func (c *Command) String() string {
 	if len(c.args) == 0 {
 		return c.name
@@ -113,7 +118,7 @@ func (c *Command) RunInDirTimeout(timeout time.Duration, dir string) ([]byte, er
 	}
 
 	if stdout.Len() > 0 {
-		log.Println("stdout:\n%s", stdout.Bytes()[:1024])
+		log.Printf("stdout:\n%s\n", stdout.Bytes()[:1024])
 	}
 	return stdout.Bytes(), nil
 }
@@ -140,7 +145,7 @@ func (c *Command) RunInDir(dir string) (string, error) {
 	return string(stdout), nil
 }
 
-// RunTimeout executes the command in defualt working directory with given timeout,
+// RunTimeout executes the command in default working directory with given timeout,
 // and returns stdout in string and error (combined with stderr).
 func (c *Command) RunTimeout(timeout time.Duration) (string, error) {
 	stdout, err := c.RunInDirTimeout(timeout, "")
@@ -150,7 +155,7 @@ func (c *Command) RunTimeout(timeout time.Duration) (string, error) {
 	return string(stdout), nil
 }
 
-// Run executes the command in defualt working directory
+// Run executes the command in default working directory
 // and returns stdout in string and error (combined with stderr).
 func (c *Command) Run() (string, error) {
 	return c.RunTimeout(-1)
