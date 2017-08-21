@@ -2,7 +2,7 @@
 // Use of this source code is governed by a MIT-style
 // license that can be found in the LICENSE file.
 
-package main
+package cmd
 
 import (
 	"os"
@@ -10,8 +10,6 @@ import (
 	"testing"
 
 	"github.com/Unknwon/com"
-
-	"github.com/lunny/gop/cmd"
 	"github.com/stretchr/testify/assert"
 	"github.com/urfave/cli"
 )
@@ -24,7 +22,6 @@ func runCommand(cmd cli.Command, dir string, args ...string) error {
 	app := cli.NewApp()
 	app.Name = "Gop"
 	app.Usage = "Build golang applications out of GOPATH"
-	app.Version = Version
 	app.Commands = []cli.Command{
 		cmd,
 	}
@@ -36,7 +33,7 @@ func runCommand(cmd cli.Command, dir string, args ...string) error {
 
 func TestInit(t *testing.T) {
 	tmpDir := os.TempDir()
-	err := runCommand(cmd.CmdInit, tmpDir)
+	err := runCommand(CmdInit, tmpDir)
 	assert.NoError(t, err)
 	assert.True(t, com.IsExist(filepath.Join(tmpDir, "src")))
 	assert.True(t, com.IsExist(filepath.Join(tmpDir, "src", "main")))
@@ -44,12 +41,12 @@ func TestInit(t *testing.T) {
 	assert.True(t, com.IsExist(filepath.Join(tmpDir, "src", "main", "main.go")))
 	assert.True(t, com.IsExist(filepath.Join(tmpDir, "gop.yml")))
 
-	err = runCommand(cmd.CmdBuild, filepath.Join(tmpDir, "src"))
+	err = runCommand(CmdBuild, filepath.Join(tmpDir, "src"))
 	assert.NoError(t, err)
 
-	err = runCommand(cmd.CmdEnsure, filepath.Join(tmpDir, "src"))
+	err = runCommand(CmdEnsure, filepath.Join(tmpDir, "src"))
 	assert.NoError(t, err)
 
-	err = runCommand(cmd.CmdStatus, filepath.Join(tmpDir, "src"))
+	err = runCommand(CmdStatus, filepath.Join(tmpDir, "src"))
 	assert.NoError(t, err)
 }
