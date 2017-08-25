@@ -19,11 +19,20 @@ import (
 
 // CmdStatus represents
 var CmdStatus = cli.Command{
-	Name:            "status",
-	Usage:           "List this project's dependencies",
-	Description:     `List this project's dependencies`,
-	Action:          runStatus,
-	SkipFlagParsing: true,
+	Name:        "status",
+	Usage:       "List this project's dependencies",
+	Description: `List this project's dependencies`,
+	Action:      runStatus,
+	Flags: []cli.Flag{
+		cli.BoolFlag{
+			Name:  "test, t",
+			Usage: "include test files",
+		},
+		cli.StringFlag{
+			Name:  "tags",
+			Usage: "tags for import package find",
+		},
+	},
 }
 
 func runStatus(cmd *cli.Context) error {
@@ -59,7 +68,7 @@ func runStatus(cmd *cli.Context) error {
 	srcDir := filepath.Join(projectRoot, "src", curTarget.Dir)
 	vendorDir := filepath.Join(projectRoot, "src", "vendor")
 
-	imports, err := ListImports(".", filepath.Join(projectRoot, "src"), srcDir, "", true)
+	imports, err := ListImports(".", filepath.Join(projectRoot, "src"), srcDir, cmd.String("tags"), cmd.Bool("test"))
 	if err != nil {
 		return err
 	}
@@ -287,7 +296,7 @@ func ListImports(importPath, rootPath, srcPath, tags string, isTest bool) ([]str
 		log.Printf("Context GOPATH: %s\n", ctxt.GOPATH)
 		log.Printf("Srouce path: %s\n", srcPath)
 	}
-	pkg, err := ctxt.Import(importPath, srcPath, build.AllowBinary)
+	pkg, err := ctxt.Import(importPath, srcPath, build.AllowBinary|build.IgnoreVendor)
 	if err != nil {
 		if _, ok := err.(*build.NoGoError); !ok {
 			return nil, fmt.Errorf("fail to get imports(%s): %v", importPath, err)
@@ -334,7 +343,7 @@ func ListImports(importPath, rootPath, srcPath, tags string, isTest bool) ([]str
 			imports = append(imports, name)
 
 			oldGOPATH := os.Getenv("GOPATH")
-			moreImports, err := ListImports(name, filepath.Join(oldGOPATH, "src", name), filepath.Join(oldGOPATH, "src", name), tags, false)
+			moreImports, err := ListImports(name, filepath.Join(oldGOPATH, "src", name), filepath.Join(oldGOPATH, "src", name), tags, isTest)
 			if err != nil {
 				return nil, err
 			}

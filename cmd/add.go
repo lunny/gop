@@ -25,18 +25,27 @@ var CmdAdd = cli.Command{
 			Name:  "update, u",
 			Usage: "update the dependency package",
 		},
+		cli.BoolFlag{
+			Name:  "test, t",
+			Usage: "include test files",
+		},
+		cli.StringFlag{
+			Name:  "tags",
+			Usage: "tags for import package find",
+		},
 	},
 }
 
-func copyPkg(srcPkgPath, dstPkgPath string) error {
+func copyPkg(srcPkgPath, dstPkgPath string, includeTest bool) error {
 	return CopyDir(srcPkgPath, dstPkgPath, func(path string) bool {
 		return strings.HasPrefix(path, filepath.Join(dstPkgPath, ".git")) ||
-			strings.HasPrefix(path, filepath.Join(dstPkgPath, "vendor"))
+			strings.HasPrefix(path, filepath.Join(dstPkgPath, "vendor")) ||
+			(!includeTest && strings.HasSuffix(path, "_test.go"))
 	})
 }
 
 // add add one package to vendor
-func add(name, projPath, globalGoPath string, isUpdate bool) error {
+func add(ctx *cli.Context, name, projPath, globalGoPath string) error {
 	if strings.HasPrefix(name, "../") || filepath.IsAbs(name) || strings.HasPrefix(name, "./") {
 		return errors.New("relative pkg and absolute pkg is not supported, only packages on GOPATH")
 	}
@@ -56,18 +65,18 @@ func add(name, projPath, globalGoPath string, isUpdate bool) error {
 		}
 
 		fmt.Println("Copying", name)
-		err = copyPkg(absPkgPath, dstPath)
+		err = copyPkg(absPkgPath, dstPath, ctx.Bool("test"))
 		if err != nil {
 			return err
 		}
-	} else if isUpdate {
+	} else if ctx.IsSet("update") {
 		if !info.IsDir() {
 			return fmt.Errorf("Dest dir %s is a file", dstPath)
 		}
 
 		fmt.Println("Copying", name)
 		os.RemoveAll(dstPath)
-		err = copyPkg(absPkgPath, dstPath)
+		err = copyPkg(absPkgPath, dstPath, ctx.Bool("test"))
 		if err != nil {
 			return err
 		}
@@ -75,7 +84,7 @@ func add(name, projPath, globalGoPath string, isUpdate bool) error {
 		return nil
 	}
 
-	imports, err := ListImports(name, absPkgPath, absPkgPath, "", false)
+	imports, err := ListImports(name, absPkgPath, absPkgPath, ctx.String("tags"), ctx.Bool("test"))
 	if err != nil {
 		return err
 	}
@@ -92,7 +101,7 @@ func add(name, projPath, globalGoPath string, isUpdate bool) error {
 			continue
 		}
 
-		if err := add(imp, projPath, globalGoPath, isUpdate); err != nil {
+		if err := add(ctx, imp, projPath, globalGoPath); err != nil {
 			return err
 		}
 	}
@@ -117,7 +126,7 @@ func runAdd(ctx *cli.Context) error {
 	}
 
 	for _, name := range names {
-		if err = add(name, projectRoot, globalGoPath, ctx.IsSet("update")); err != nil {
+		if err = add(ctx, name, projectRoot, globalGoPath); err != nil {
 			return err
 		}
 	}

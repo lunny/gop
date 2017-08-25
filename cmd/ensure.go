@@ -37,6 +37,14 @@ var CmdEnsure = cli.Command{
 			Name:  "update, u",
 			Usage: "call go get -u to update the package if package is exist in GOPATH",
 		},
+		cli.BoolFlag{
+			Name:  "test, t",
+			Usage: "include test files",
+		},
+		cli.StringFlag{
+			Name:  "tags",
+			Usage: "tags for import package find",
+		},
 	},
 }
 
@@ -44,7 +52,7 @@ var updatedPackage = make(map[string]struct{})
 
 func ensure(cmd *cli.Context, globalGoPath, projectRoot, targetDir string) error {
 	vendorDir := filepath.Join(projectRoot, "src", "vendor")
-	imports, err := ListImports(".", filepath.Join(projectRoot, "src"), targetDir, "", true)
+	imports, err := ListImports(".", filepath.Join(projectRoot, "src"), targetDir, cmd.String("tags"), cmd.Bool("test"))
 	if err != nil {
 		return err
 	}
@@ -86,7 +94,7 @@ func ensure(cmd *cli.Context, globalGoPath, projectRoot, targetDir string) error
 
 			fmt.Println("Copying", imp)
 			os.RemoveAll(dstDir)
-			err = copyPkg(srcDir, dstDir)
+			err = copyPkg(srcDir, dstDir, cmd.Bool("test"))
 			if err != nil {
 				return err
 			}
@@ -124,7 +132,7 @@ func ensure(cmd *cli.Context, globalGoPath, projectRoot, targetDir string) error
 			}
 
 			fmt.Println("Copying", imp)
-			err = copyPkg(srcDir, dstDir)
+			err = copyPkg(srcDir, dstDir, cmd.Bool("test"))
 			if err != nil {
 				return err
 			}
