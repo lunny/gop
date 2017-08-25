@@ -11,7 +11,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/lunny/gop/util"
 	"github.com/urfave/cli"
 )
 
@@ -29,15 +28,21 @@ var CmdAdd = cli.Command{
 	},
 }
 
+func copyPkg(srcPkgPath, dstPkgPath string) error {
+	return CopyDir(srcPkgPath, dstPkgPath, func(path string) bool {
+		return strings.HasPrefix(path, filepath.Join(dstPkgPath, ".git")) ||
+			strings.HasPrefix(path, filepath.Join(dstPkgPath, "vendor"))
+	})
+}
+
 // add add one package to vendor
 func add(name, projPath, globalGoPath string, isUpdate bool) error {
 	if strings.HasPrefix(name, "../") || filepath.IsAbs(name) || strings.HasPrefix(name, "./") {
 		return errors.New("relative pkg and absolute pkg is not supported, only packages on GOPATH")
 	}
 
-	parentPkg, _ := util.NormalizeName(name)
-	absPkgPath := filepath.Join(globalGoPath, "src", parentPkg)
-	dstPath := filepath.Join(projPath, "src", "vendor", parentPkg)
+	absPkgPath := filepath.Join(globalGoPath, "src", name)
+	dstPath := filepath.Join(projPath, "src", "vendor", name)
 
 	_, err := os.Stat(absPkgPath)
 	if err != nil {
@@ -50,10 +55,8 @@ func add(name, projPath, globalGoPath string, isUpdate bool) error {
 			return err
 		}
 
-		fmt.Println("Copying", parentPkg)
-		err = CopyDir(absPkgPath, dstPath, func(path string) bool {
-			return strings.HasPrefix(path, ".git")
-		})
+		fmt.Println("Copying", name)
+		err = copyPkg(absPkgPath, dstPath)
 		if err != nil {
 			return err
 		}
@@ -62,11 +65,9 @@ func add(name, projPath, globalGoPath string, isUpdate bool) error {
 			return fmt.Errorf("Dest dir %s is a file", dstPath)
 		}
 
-		fmt.Println("Copying", parentPkg)
+		fmt.Println("Copying", name)
 		os.RemoveAll(dstPath)
-		err = CopyDir(absPkgPath, dstPath, func(path string) bool {
-			return strings.HasPrefix(path, ".git")
-		})
+		err = copyPkg(absPkgPath, dstPath)
 		if err != nil {
 			return err
 		}
@@ -74,7 +75,7 @@ func add(name, projPath, globalGoPath string, isUpdate bool) error {
 		return nil
 	}
 
-	imports, err := ListImports(parentPkg, absPkgPath, absPkgPath, "", false)
+	imports, err := ListImports(name, absPkgPath, absPkgPath, "", false)
 	if err != nil {
 		return err
 	}

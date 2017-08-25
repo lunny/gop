@@ -14,7 +14,6 @@ import (
 	"strings"
 
 	"github.com/Unknwon/com"
-	"github.com/lunny/gop/util"
 	"github.com/urfave/cli"
 )
 
@@ -328,21 +327,18 @@ func ListImports(importPath, rootPath, srcPath, tags string, isTest bool) ([]str
 			if err != nil {
 				return nil, err
 			}
-			for _, mi := range moreImports {
-				pkgName, _ := util.NormalizeName(mi)
+			for _, pkgName := range moreImports {
 				imports = append(imports, pkgName)
 			}
 		} else {
-			pkgName, _ := util.NormalizeName(name)
-			imports = append(imports, pkgName)
+			imports = append(imports, name)
 
 			oldGOPATH := os.Getenv("GOPATH")
 			moreImports, err := ListImports(name, filepath.Join(oldGOPATH, "src", name), filepath.Join(oldGOPATH, "src", name), tags, false)
 			if err != nil {
 				return nil, err
 			}
-			for _, mi := range moreImports {
-				pkgName, _ := util.NormalizeName(mi)
+			for _, pkgName := range moreImports {
 				imports = append(imports, pkgName)
 			}
 		}

@@ -15,7 +15,6 @@ import (
 	"strings"
 
 	"github.com/Unknwon/com"
-	"github.com/lunny/gop/util"
 	"github.com/urfave/cli"
 )
 
@@ -62,9 +61,6 @@ func ensure(cmd *cli.Context, globalGoPath, projectRoot, targetDir string) error
 			continue
 		}
 
-		// get parent package
-		imp, _ = util.NormalizeName(imp)
-
 		// package dir
 		srcDir := filepath.Join(globalGoPath, "src", imp)
 		// FIXME: dry will lost some packages with -g or -u
@@ -90,9 +86,7 @@ func ensure(cmd *cli.Context, globalGoPath, projectRoot, targetDir string) error
 
 			fmt.Println("Copying", imp)
 			os.RemoveAll(dstDir)
-			err = CopyDir(srcDir, dstDir, func(path string) bool {
-				return strings.HasPrefix(path, ".git")
-			})
+			err = copyPkg(srcDir, dstDir)
 			if err != nil {
 				return err
 			}
@@ -130,9 +124,7 @@ func ensure(cmd *cli.Context, globalGoPath, projectRoot, targetDir string) error
 			}
 
 			fmt.Println("Copying", imp)
-			err = CopyDir(srcDir, dstDir, func(path string) bool {
-				return strings.HasPrefix(path, ".git")
-			})
+			err = copyPkg(srcDir, dstDir)
 			if err != nil {
 				return err
 			}

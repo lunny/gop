@@ -15,7 +15,7 @@ import (
 
 const (
 	// Version of gop
-	Version = "0.4.0821"
+	Version = "0.5.0825"
 )
 
 func main() {
