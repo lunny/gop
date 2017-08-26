@@ -113,7 +113,8 @@ func runBuildNoCtx(args []string) error {
 	}
 
 	var ext string
-	if runtime.GOOS == "windows" {
+	if os.Getenv("GOOS") == "windows" ||
+		(os.Getenv("GOOS") == "" && runtime.GOOS == "windows") {
 		ext = ".exe"
 	}
 

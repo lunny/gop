@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 
 	"github.com/Unknwon/com"
@@ -55,7 +56,13 @@ func runRelease(ctx *cli.Context) error {
 		}
 	}
 
-	args = append(args, "-o", filepath.Join(projectRoot, "bin", target.Name, target.Name))
+	var ext string
+	if os.Getenv("GOOS") == "windows" ||
+		(os.Getenv("GOOS") == "" && runtime.GOOS == "windows") {
+		ext = ".exe"
+	}
+
+	args = append(args, "-o", filepath.Join(projectRoot, "bin", target.Name, target.Name+ext))
 	cmd := NewCommand("build").AddArguments(args...)
 	envs := os.Environ()
 	var gopathIdx = -1
@@ -73,8 +80,6 @@ func runRelease(ctx *cli.Context) error {
 		envs = append(envs, newGopath)
 	}
 	cmd.Env = envs
-
-	Println(cmd)
 
 	err = cmd.RunInDirPipeline(filepath.Join(projectRoot, "src", target.Dir), os.Stdout, os.Stderr)
 	if err != nil {
