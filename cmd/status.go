@@ -5,11 +5,7 @@
 package cmd
 
 import (
-	"errors"
 	"fmt"
-	"go/build"
-	"log"
-	"os"
 	"path/filepath"
 	"strings"
 
@@ -36,15 +32,6 @@ var CmdStatus = cli.Command{
 }
 
 func runStatus(cmd *cli.Context) error {
-	var tags string
-	ctxt := build.Default
-	ctxt.BuildTags = strings.Split(tags, " ")
-
-	globalGoPath, ok := os.LookupEnv("GOPATH")
-	if !ok {
-		return errors.New("Not found GOPATH")
-	}
-
 	level, projectRoot, err := analysisDirLevel()
 	if err != nil {
 		return err
@@ -64,16 +51,15 @@ func runStatus(cmd *cli.Context) error {
 		return err
 	}
 
-	ctxt.GOPATH = globalGoPath
-	srcDir := filepath.Join(projectRoot, "src", curTarget.Dir)
 	vendorDir := filepath.Join(projectRoot, "src", "vendor")
 
-	imports, err := ListImports(".", filepath.Join(projectRoot, "src"), srcDir, cmd.String("tags"), cmd.Bool("test"))
+	imports, err := ListImports(projectRoot, curTarget.Dir, projectRoot,
+		filepath.Join(projectRoot, "src"), cmd.String("tags"), cmd.Bool("test"))
 	if err != nil {
 		return err
 	}
 	for i, imp := range imports {
-		pkg := filepath.Join(projectRoot, "src", imp)
+		pkg := filepath.Join(projectRoot, "src", imp.Name)
 		if com.IsExist(pkg) {
 			continue
 		}
@@ -90,7 +76,7 @@ func runStatus(cmd *cli.Context) error {
 		}
 
 		// FIXME: imp only UNIX
-		p := filepath.Join(vendorDir, imp)
+		p := filepath.Join(vendorDir, imp.Name)
 		exist, err := isDirExist(p)
 		if err != nil {
 			return err
@@ -100,7 +86,7 @@ func runStatus(cmd *cli.Context) error {
 		} else {
 			fmt.Print("[ ] ")
 		}
-		fmt.Println(imp)
+		fmt.Println(imp.Name)
 	}
 
 	return nil
@@ -270,87 +256,3 @@ var (
 	// Debug indicated whether it is debug mode
 	Debug = false
 )
-
-func isDirExist(dirName string) (bool, error) {
-	f, err := os.Stat(dirName)
-	if err != nil {
-		if os.IsNotExist(err) {
-			return false, nil
-		}
-		return false, err
-	}
-	if !f.IsDir() {
-		return false, errors.New("the same name file exist")
-	}
-	return true, nil
-}
-
-// ListImports list all the dependencies packages name
-func ListImports(importPath, rootPath, srcPath, tags string, isTest bool) ([]string, error) {
-	oldGOPATH := os.Getenv("GOPATH")
-	ctxt := build.Default
-	ctxt.BuildTags = strings.Split(tags, " ")
-	ctxt.GOPATH = oldGOPATH
-	if Debug {
-		log.Printf("Import/root path: %s : %s\n", importPath, rootPath)
-		log.Printf("Context GOPATH: %s\n", ctxt.GOPATH)
-		log.Printf("Srouce path: %s\n", srcPath)
-	}
-	pkg, err := ctxt.Import(importPath, srcPath, build.AllowBinary|build.IgnoreVendor)
-	if err != nil {
-		if _, ok := err.(*build.NoGoError); !ok {
-			return nil, fmt.Errorf("fail to get imports(%s): %v", importPath, err)
-		}
-		log.Printf("Getting imports: %v\n", err)
-	}
-
-	rawImports := pkg.Imports
-	numImports := len(rawImports)
-	if isTest {
-		rawImports = append(rawImports, pkg.TestImports...)
-		numImports = len(rawImports)
-	}
-	imports := make([]string, 0, numImports)
-	for _, name := range rawImports {
-		if IsGoRepoPath(name) {
-			continue
-		}
-
-		if name == "C" || strings.HasPrefix(name, "../") || strings.HasPrefix(name, "./") {
-			continue
-		}
-
-		exist, err := isDirExist(filepath.Join(rootPath, name))
-		if err != nil {
-			return nil, err
-		}
-
-		if Debug {
-			log.Printf("Found dependency: %s\n", name)
-		}
-
-		if exist {
-			imports = append(imports, name)
-
-			moreImports, err := ListImports("./"+name, rootPath, rootPath, tags, isTest)
-			if err != nil {
-				return nil, err
-			}
-			for _, pkgName := range moreImports {
-				imports = append(imports, pkgName)
-			}
-		} else {
-			imports = append(imports, name)
-
-			oldGOPATH := os.Getenv("GOPATH")
-			moreImports, err := ListImports(name, filepath.Join(oldGOPATH, "src", name), filepath.Join(oldGOPATH, "src", name), tags, isTest)
-			if err != nil {
-				return nil, err
-			}
-			for _, pkgName := range moreImports {
-				imports = append(imports, pkgName)
-			}
-		}
-	}
-	return imports, nil
-}

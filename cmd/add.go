@@ -84,7 +84,7 @@ func add(ctx *cli.Context, name, projPath, globalGoPath string) error {
 		return nil
 	}
 
-	imports, err := ListImports(name, absPkgPath, absPkgPath, ctx.String("tags"), ctx.Bool("test"))
+	imports, err := ListImports(globalGoPath, name, projPath, absPkgPath, ctx.String("tags"), ctx.Bool("test"))
 	if err != nil {
 		return err
 	}
@@ -101,7 +101,7 @@ func add(ctx *cli.Context, name, projPath, globalGoPath string) error {
 			continue
 		}
 
-		if err := add(ctx, imp, projPath, globalGoPath); err != nil {
+		if err := add(ctx, imp.Name, projPath, globalGoPath); err != nil {
 			return err
 		}
 	}

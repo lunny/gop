@@ -7,14 +7,12 @@ package cmd
 import (
 	"errors"
 	"fmt"
-	"go/build"
 	"io"
 	"os"
 	"path"
 	"path/filepath"
 	"strings"
 
-	"github.com/Unknwon/com"
 	"github.com/urfave/cli"
 )
 
@@ -50,58 +48,52 @@ var CmdEnsure = cli.Command{
 
 var updatedPackage = make(map[string]struct{})
 
-func ensure(cmd *cli.Context, globalGoPath, projectRoot, targetDir string) error {
+func ensure(cmd *cli.Context, globalGoPath, projectRoot string, target *Target) error {
 	vendorDir := filepath.Join(projectRoot, "src", "vendor")
-	imports, err := ListImports(".", filepath.Join(projectRoot, "src"), targetDir, cmd.String("tags"), cmd.Bool("test"))
+	imports, err := ListImports(projectRoot, target.Dir, projectRoot, filepath.Join(projectRoot, "src"), cmd.String("tags"), cmd.Bool("test"))
 	if err != nil {
 		return err
 	}
 	for _, imp := range imports {
-		pkg := filepath.Join(projectRoot, "src", imp)
-		if com.IsExist(pkg) {
+		if imp.Type == PkgTypeProjectGOPATH || imp.Type == PkgTypeGoRoot {
 			continue
 		}
-		if IsGoRepoPath(imp) {
-			continue
-		}
-
-		if imp == "C" || strings.HasPrefix(imp, "../") || strings.HasPrefix(imp, "./") {
+		if imp.Name == "C" || strings.HasPrefix(imp.Name, "../") || strings.HasPrefix(imp.Name, "./") {
 			continue
 		}
 
 		// package dir
-		srcDir := filepath.Join(globalGoPath, "src", imp)
+		srcDir := filepath.Join(globalGoPath, "src", imp.Name)
 		// FIXME: dry will lost some packages with -g or -u
 		if cmd.IsSet("dry") {
-			fmt.Println("Dry copying", imp)
+			fmt.Println("Dry copying", imp.Name)
 			continue
 		}
 
 		// FIXME: imp only UNIX
-		dstDir := filepath.Join(vendorDir, imp)
-
+		dstDir := filepath.Join(vendorDir, imp.Name)
 		if cmd.IsSet("update") {
-			if _, ok := updatedPackage[imp]; ok {
+			if _, ok := updatedPackage[imp.Name]; ok {
 				continue
 			}
 
-			fmt.Println("Downloading", imp)
-			cmdGet := NewCommand("get").AddArguments("-u", imp)
+			fmt.Println("Downloading", imp.Name)
+			cmdGet := NewCommand("get").AddArguments("-u", imp.Name)
 			err = cmdGet.RunInDirPipeline("src", os.Stdout, os.Stderr)
 			if err != nil {
 				return err
 			}
 
-			fmt.Println("Copying", imp)
+			fmt.Println("Copying", imp.Name)
 			os.RemoveAll(dstDir)
 			err = copyPkg(srcDir, dstDir, cmd.Bool("test"))
 			if err != nil {
 				return err
 			}
 
-			updatedPackage[imp] = struct{}{}
+			updatedPackage[imp.Name] = struct{}{}
 
-			return ensure(cmd, globalGoPath, projectRoot, targetDir)
+			return ensure(cmd, globalGoPath, projectRoot, target)
 		}
 
 		exist, err := isDirExist(dstDir)
@@ -116,22 +108,22 @@ func ensure(cmd *cli.Context, globalGoPath, projectRoot, targetDir string) error
 			}
 			if !exist {
 				if cmd.IsSet("get") {
-					fmt.Println("Downloading", imp)
-					cmdGet := NewCommand("get").AddArguments(imp)
-					err = cmdGet.RunInDirPipeline("src", os.Stdout, os.Stderr)
+					fmt.Println("Downloading", imp.Name)
+					cmdGet := NewCommand("get").AddArguments(imp.Name)
+					err = cmdGet.RunInDirPipeline(filepath.Join(projectRoot, "src"), os.Stdout, os.Stderr)
 					if err != nil {
 						return err
 					}
 
 					// scan the package dependencies again since the new package added
-					return ensure(cmd, globalGoPath, projectRoot, targetDir)
+					return ensure(cmd, globalGoPath, projectRoot, target)
 				}
 
-				fmt.Printf("Package %s not found on $GOPATH, please use -g option or go get at first\n", imp)
+				fmt.Printf("Package %s not found on $GOPATH, please use -g option or go get at first\n", imp.Name)
 				return nil
 			}
 
-			fmt.Println("Copying", imp)
+			fmt.Println("Copying", imp.Name)
 			err = copyPkg(srcDir, dstDir, cmd.Bool("test"))
 			if err != nil {
 				return err
@@ -142,10 +134,6 @@ func ensure(cmd *cli.Context, globalGoPath, projectRoot, targetDir string) error
 }
 
 func runEnsure(cmd *cli.Context) error {
-	var tags string
-	ctxt := build.Default
-	ctxt.BuildTags = strings.Split(tags, " ")
-
 	globalGoPath, ok := os.LookupEnv("GOPATH")
 	if !ok {
 		return errors.New("Not found GOPATH")
@@ -170,10 +158,7 @@ func runEnsure(cmd *cli.Context) error {
 		return err
 	}
 
-	ctxt.GOPATH = globalGoPath
-	targetDir := filepath.Join(projectRoot, "src", curTarget.Dir)
-
-	return ensure(cmd, globalGoPath, projectRoot, targetDir)
+	return ensure(cmd, globalGoPath, projectRoot, curTarget)
 }
 
 // IsDir returns true if given path is a directory,
