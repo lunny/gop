@@ -38,8 +38,8 @@ var CmdAdd = cli.Command{
 
 func copyPkg(srcPkgPath, dstPkgPath string, includeTest bool) error {
 	return CopyDir(srcPkgPath, dstPkgPath, func(path string) bool {
-		return strings.HasPrefix(path, filepath.Join(dstPkgPath, ".git")) ||
-			strings.HasPrefix(path, filepath.Join(dstPkgPath, "vendor")) ||
+		return strings.HasPrefix(path, ".git/") ||
+			strings.HasPrefix(path, "vendor/") ||
 			(!includeTest && strings.HasSuffix(path, "_test.go"))
 	})
 }
