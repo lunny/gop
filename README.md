@@ -157,7 +157,6 @@ gop release [target_name]
 ## TODO
 
 * [ ] Versions support, specify a dependency package verison
-* [ ] `Go generate` support before calling `gop build` or other command
 * [ ] Improve bianry package building support
 * [ ] Live support for `gop run`
 * [ ] Support run `gop` in `GOPATH`
