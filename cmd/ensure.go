@@ -128,6 +128,8 @@ func ensure(cmd *cli.Context, globalGoPath, projectRoot string, target *Target) 
 			if err != nil {
 				return err
 			}
+
+			return ensure(cmd, globalGoPath, projectRoot, target)
 		}
 	}
 	return nil
