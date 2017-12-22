@@ -74,7 +74,7 @@ func (c *Command) AddArguments(args ...string) *Command {
 // it pipes stdout and stderr to given io.Writer.
 func (c *Command) RunInDirTimeoutPipeline(timeout time.Duration, dir string, stdout, stderr io.Writer) error {
 	if timeout == -1 {
-		timeout = 3 * time.Minute
+		timeout = 30 * time.Minute
 	}
 
 	cmd := exec.Command(c.name, c.args...)

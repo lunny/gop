@@ -84,7 +84,7 @@ func analysisTarget(level int, targetName, projectRoot string) error {
 	return nil
 }
 
-func runBuildNoCtx(args []string) error {
+func runBuildNoCtx(args []string, isWindows bool) error {
 	level, projectRoot, err := analysisDirLevel()
 	if err != nil {
 		return err
@@ -113,8 +113,7 @@ func runBuildNoCtx(args []string) error {
 	}
 
 	var ext string
-	if os.Getenv("GOOS") == "windows" ||
-		(os.Getenv("GOOS") == "" && runtime.GOOS == "windows") {
+	if isWindows {
 		ext = ".exe"
 	}
 
@@ -155,5 +154,6 @@ func runBuildNoCtx(args []string) error {
 }
 
 func runBuild(ctx *cli.Context) error {
-	return runBuildNoCtx(ctx.Args())
+	return runBuildNoCtx(ctx.Args(), os.Getenv("GOOS") == "windows" ||
+		(os.Getenv("GOOS") == "" && runtime.GOOS == "windows"))
 }

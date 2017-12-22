@@ -59,7 +59,9 @@ func runRun(ctx *cli.Context) error {
 		args = append(args[:watchFlagIdx], args[watchFlagIdx+1:]...)
 	}
 
-	err := runBuildNoCtx(args)
+	var isWindows = runtime.GOOS == "windows"
+	// gop run don't support cross compile
+	err := runBuildNoCtx(args, isWindows)
 	if err != nil {
 		return err
 	}
@@ -70,7 +72,7 @@ func runRun(ctx *cli.Context) error {
 	}
 
 	var ext string
-	if runtime.GOOS == "windows" {
+	if isWindows {
 		ext = ".exe"
 	}
 
@@ -99,6 +101,15 @@ func runRun(ctx *cli.Context) error {
 		}
 
 		go func() {
+			processLock.Lock()
+			err := runBinary(exePath, nil)
+			if err == nil {
+				process = nil
+			}
+			processLock.Unlock()
+		}()
+
+		go func() {
 			for {
 				select {
 				case event := <-watcher.Events:
@@ -114,9 +125,9 @@ func runRun(ctx *cli.Context) error {
 								}
 								process = nil
 							}
-							err := runBuildNoCtx(args)
+							err := runBuildNoCtx(args, isWindows)
 							if err != nil {
-								log.Println("error:", err)
+								log.Println("Build Error:", err)
 								done <- false
 							} else {
 								runBinary(exePath, done)
@@ -142,7 +153,6 @@ func runRun(ctx *cli.Context) error {
 		}()
 	}
 
-	go runBinary(exePath, nil)
 	<-done
 
 	if process != nil {
