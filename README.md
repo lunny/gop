@@ -165,6 +165,6 @@ gop release [target_name]
 ## TODO
 
 * [ ] Versions support, specify a dependency package verison
-* [ ] Improve bianry package building support
+* [ ] Improve binary package building support
 * [ ] Live support for `gop run`
 * [ ] Support run `gop` in `GOPATH`
