@@ -36,23 +36,26 @@ func analysisTarget(level int, targetName, projectRoot string) error {
 				return err
 			}
 
-			dirName := filepath.Base(wd)
+			relPath, err := filepath.Rel(filepath.Join(projectRoot, "src"), wd)
+			if err != nil {
+				return err
+			}
 
 			for _, t := range config.Targets {
-				if t.Dir == dirName {
+				if t.Dir == relPath {
 					curTarget = &t
 					break
 				}
 			}
 
-			var name = dirName
-			if dirName == "main" {
+			var name = filepath.Base(relPath)
+			if relPath == "main" {
 				name = filepath.Base(projectRoot)
 			}
 
 			curTarget = &Target{
 				Name: name,
-				Dir:  dirName,
+				Dir:  relPath,
 			}
 		}
 		if curTarget == nil {

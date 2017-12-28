@@ -118,6 +118,14 @@ gop status [target_name]
 gop add [-u] <package>
 ```
 
+### update
+
+Update a package to this project.
+
+```
+gop update <package>
+```
+
 ### rm
 
 从工程 vendor 中删除某个包。

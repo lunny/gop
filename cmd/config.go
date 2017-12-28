@@ -67,14 +67,29 @@ func analysisDirLevel() (int, string, error) {
 		return 0, "", err
 	}
 
+	wd, err = filepath.Abs(wd)
+	if err != nil {
+		return 0, "", err
+	}
+
 	if com.IsExist(filepath.Join(wd, "gop.yml")) {
 		return dirLevelRoot, wd, nil
 	} else if filepath.Base(wd) == "src" &&
 		com.IsExist(filepath.Join(filepath.Dir(wd), "gop.yml")) {
 		return dirLevelSrc, filepath.Dir(wd), nil
-	} else if filepath.Base(filepath.Dir(wd)) == "src" &&
-		com.IsExist(filepath.Join(filepath.Dir(filepath.Dir(wd)), "gop.yml")) {
-		return dirLevelTarget, filepath.Dir(filepath.Dir(wd)), nil
 	}
-	return dirLevelOutProject, "", errors.New("unknow directory to run gop")
+
+	srcDir := filepath.Dir(wd)
+	for filepath.Base(srcDir) != "src" {
+		srcDir = filepath.Dir(srcDir)
+		if srcDir == "" || srcDir == "/" {
+			break
+		}
+	}
+
+	if srcDir == "" || !com.IsExist(filepath.Join(filepath.Dir(srcDir), "gop.yml")) {
+		return dirLevelOutProject, "", errors.New("unknow directory to run gop")
+	}
+
+	return dirLevelTarget, filepath.Dir(srcDir), nil
 }

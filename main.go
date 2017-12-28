@@ -15,7 +15,7 @@ import (
 
 const (
 	// Version of gop
-	Version = "0.5.1031"
+	Version = "0.6.1228"
 )
 
 func main() {
@@ -33,7 +33,9 @@ func main() {
 		cmd.CmdRemove,
 		cmd.CmdRelease,
 		cmd.CmdRun,
+		cmd.CmdUpdate,
 	}
+
 	err := app.Run(os.Args)
 	if err != nil {
 		log.Fatal("Failed to run app with", os.Args, ":", err)

@@ -108,10 +108,18 @@ gop status [target_name]
 
 ### add
 
-Add a package to this project. `-u` will override the package dir on `vendor`.
+Add a package to this project.
 
 ```
-gop add [-u] <package>
+gop add <package>
+```
+
+### update
+
+Update a package to this project.
+
+```
+gop update <package>
 ```
 
 ### rm
