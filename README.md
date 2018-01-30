@@ -5,7 +5,7 @@
 [![CircleCI](https://circleci.com/gh/lunny/gop.svg?style=shield)](https://circleci.com/gh/lunny/gop) [![codecov](https://codecov.io/gh/lunny/gop/branch/master/graph/badge.svg)](https://codecov.io/gh/lunny/gop)
 [![](https://goreportcard.com/badge/github.com/lunny/gop)](https://goreportcard.com/report/github.com/lunny/gop) 
 
-GOP is a project manangement tool for building your golang applications out of GOPATH. Also this means it's **not** go-getable. GOP copy all denpendencies to `src/vendor` directory and all application's source is also in this directory. 
+GOP is a project manangement tool for building your golang applications out of global GOPATH. In fact gop will keep both global GOPATH and every project GOPATH. But that means your project will  **not** go-getable. Of course, GOP itself is go-getable. GOP copy all denpendencies from global GOPATH to your project's `src/vendor` directory and all application's source is also in `src` directory.
 
 A normal process using gop is below:
 
@@ -33,7 +33,7 @@ go get github.com/lunny/gop
 
 ## Directory structure
 
-This is an example project's directory.
+Every project should have a GOPATH directory structure and put a `gop.yml` int the root directory. This is an example project's directory tree.
 
 ```
 <project root>
@@ -60,7 +60,7 @@ This is an example project's directory.
 
 ## Gop.yml
 
-The project yml configuration file. This is an example. Of course, if you didn't define any target, the default target is src/main and the target name is the project name.
+Gop will recognize a gop project which has `gop.yml`. The file is also a project configuration file. Below is an example. If you didn't define any target, the default target is src/main and the target name is the project name.
 
 ```yml
 targets:
@@ -84,7 +84,7 @@ targets:
 
 ### init
 
-Create the default directory structs.
+Create the default directory structure tree.
 
 ```
 gop init
@@ -92,7 +92,7 @@ gop init
 
 ### ensure
 
-Auto copy dependencies from $GOPATH to local project directory. `-g` will let you automatically call `go get <package>` when the package is missing on `GOPATH`. `-u` will always `go get <package>` on all the dependencies and copy them to `vendor`.
+Automatically copy dependencies from $GOPATH to local project directory. `-g` will let you automatically call `go get <package>` when the package is missing on `GOPATH`. `-u` will always `go get <package>` on all the dependencies and copy them to `vendor`.
 
 ```
 gop ensure [-g|-u] [target_name]
