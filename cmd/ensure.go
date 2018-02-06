@@ -55,7 +55,7 @@ func ensure(cmd *cli.Context, globalGoPath, projectRoot string, target *Target) 
 		return err
 	}
 	for _, imp := range imports {
-		if imp.Type == PkgTypeProjectGOPATH || imp.Type == PkgTypeGoRoot {
+		if imp.Type == PkgTypeProjectGoPath || imp.Type == PkgTypeGoRoot {
 			continue
 		}
 		if imp.Name == "C" || strings.HasPrefix(imp.Name, "../") || strings.HasPrefix(imp.Name, "./") {

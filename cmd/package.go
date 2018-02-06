@@ -5,21 +5,93 @@
 package cmd
 
 import (
+	"encoding/json"
+	"errors"
 	"fmt"
 	"go/build"
 	"log"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 )
+
+var goRepoPath = map[string]bool{
+	"builtin": true,
+}
+
+func init() {
+	standardPath, err := retrieveGoStdPkgs()
+	if err != nil {
+		panic(err)
+	}
+
+	for p := range standardPath {
+		if strings.HasPrefix(p, "vendor/") {
+			continue
+		}
+		for {
+			goRepoPath[p] = true
+			i := strings.LastIndex(p, "/")
+			if i < 0 {
+				break
+			}
+			p = p[:i]
+		}
+	}
+}
+
+// retrieveGoVersion
+func retrieveGoVersion() (string, error) {
+	cmd := exec.Command("go", "version")
+	bs, err := cmd.Output()
+	if err != nil {
+		return "", err
+	}
+
+	if len(bs) < 16 {
+		return "", errors.New("retrieve go version failed")
+	}
+
+	v := strings.TrimLeft(string(bs), "go version")
+	v = strings.Split(v, " ")[0]
+	v = strings.TrimLeft(v, "go")
+	return v, nil
+}
+
+// retrieveGoStdPkgs retrieve go std pkg names
+func retrieveGoStdPkgs() (map[string]bool, error) {
+	cmd := exec.Command("go", "list", "-f", `"{{.ImportPath}}": true,`, "std")
+	bs, err := cmd.Output()
+	if err != nil {
+		return nil, err
+	}
+
+	bs[len(bs)-2] = '}'
+	res := make([]byte, 0, len(bs)+1)
+	res = append(res, '{')
+	res = append(res, bs...)
+
+	var ret = make(map[string]bool)
+	err = json.Unmarshal(res, &ret)
+	if err != nil {
+		return nil, err
+	}
+	return ret, nil
+}
+
+// IsGoRepoPath returns true if package is from standard library.
+func IsGoRepoPath(importPath string) bool {
+	return goRepoPath[importPath]
+}
 
 type PkgType int
 
 const (
 	PkgTypeUnknown       = iota // 0
 	PkgTypeGoRoot               // 1
-	PkgTypeGloablGoPATH         // 2
-	PkgTypeProjectGOPATH        // 3
+	PkgTypeGloablGoPath         // 2
+	PkgTypeProjectGoPath        // 3
 	PkgTypeProjectVendor        // 4
 )
 
@@ -30,7 +102,7 @@ func getPkgType(globalGoPath, projectRoot, name string) (PkgType, bool, error) {
 		return PkgTypeUnknown, false, err
 	}
 	if exist {
-		return PkgTypeProjectGOPATH, true, nil
+		return PkgTypeProjectGoPath, true, nil
 	}
 
 	exist, err = isDirExist(filepath.Join(projectRoot, "src", "vendor", name))
@@ -46,14 +118,14 @@ func getPkgType(globalGoPath, projectRoot, name string) (PkgType, bool, error) {
 		return PkgTypeUnknown, false, err
 	}
 	if exist {
-		return PkgTypeGloablGoPATH, true, nil
+		return PkgTypeGloablGoPath, true, nil
 	}
 
 	if IsGoRepoPath(name) {
 		return PkgTypeGoRoot, true, nil
 	}
 
-	return PkgTypeGloablGoPATH, false, nil
+	return PkgTypeGloablGoPath, false, nil
 }
 
 type Pkg struct {
@@ -104,10 +176,10 @@ func ListImports(gopath, importPath, projectRoot, srcPath, tags string, isTest b
 
 		switch pkgType {
 		case PkgTypeGoRoot:
-		case PkgTypeGloablGoPATH:
+		case PkgTypeGloablGoPath:
 			imports = append(imports, Pkg{
 				Name: name,
-				Type: PkgTypeGloablGoPATH,
+				Type: PkgTypeGloablGoPath,
 			})
 			if exist {
 				moreImports, err := ListImports(oldGOPATH, name, projectRoot, filepath.Join(oldGOPATH, "src"), tags, isTest)
@@ -116,10 +188,10 @@ func ListImports(gopath, importPath, projectRoot, srcPath, tags string, isTest b
 				}
 				imports = append(imports, moreImports...)
 			}
-		case PkgTypeProjectGOPATH:
+		case PkgTypeProjectGoPath:
 			imports = append(imports, Pkg{
 				Name: name,
-				Type: PkgTypeProjectGOPATH,
+				Type: PkgTypeProjectGoPath,
 			})
 			moreImports, err := ListImports(projectRoot, name, projectRoot, filepath.Join(projectRoot, "src"), tags, isTest)
 			if err != nil {

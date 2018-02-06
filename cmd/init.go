@@ -29,6 +29,11 @@ func main() {
 `
 )
 
+var (
+	// Debug indicated whether it is debug mode
+	Debug = false
+)
+
 // CmdInit represents
 var CmdInit = cli.Command{
 	Name:        "init",
