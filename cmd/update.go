@@ -17,8 +17,8 @@ import (
 // CmdUpdate represents update a new dependency package and it's dependencies to this project
 var CmdUpdate = cli.Command{
 	Name:        "update",
-	Usage:       "update a new dependency",
-	Description: `update a new dependency`,
+	Usage:       "Update spcified vendor packages",
+	Description: `Update spcified vendor packages`,
 	Action:      runUpdate,
 	Flags: []cli.Flag{
 		cli.BoolFlag{
@@ -28,6 +28,10 @@ var CmdUpdate = cli.Command{
 		cli.StringFlag{
 			Name:  "tags",
 			Usage: "tags for import package find",
+		},
+		cli.BoolFlag{
+			Name: "full, f",
+			Usage: "if update all dependent packages, default only missing packages",
 		},
 	},
 }
@@ -47,11 +51,11 @@ func update(ctx *cli.Context, name, projPath, globalGoPath string) error {
 	}
 
 	info, err := os.Stat(dstPath)
-	if err != nil {
+	if err != nil && !os.IsNotExist(err) {
 		return err
 	}
 
-	if !info.IsDir() {
+	if err == nil && !info.IsDir() {
 		return fmt.Errorf("Dest dir %s is a file", dstPath)
 	}
 
@@ -79,8 +83,16 @@ func update(ctx *cli.Context, name, projPath, globalGoPath string) error {
 			continue
 		}
 
-		if err := update(ctx, imp.Name, projPath, globalGoPath); err != nil {
-			return err
+		var needUpdate = ctx.Bool("full")
+		if !needUpdate {
+			exist, _ := isDirExist(filepath.Join(projPath, "src", "vendor", imp.Name))
+			needUpdate = !exist
+		}
+
+		if needUpdate {
+			if err = update(ctx, imp.Name, projPath, globalGoPath); err != nil {
+				return err
+			}
 		}
 	}
 	return nil

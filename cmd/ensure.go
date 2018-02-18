@@ -19,8 +19,8 @@ import (
 // CmdEnsure represents
 var CmdEnsure = cli.Command{
 	Name:        "ensure",
-	Usage:       "Ensure all the dependencies in the src directory",
-	Description: `Ensure all the dependencies in the src directory`,
+	Usage:       "Ensure all the dependent packages installed accroding target",
+	Description: `Ensure all the dependent packages installed accroding target`,
 	Action:      runEnsure,
 	Flags: []cli.Flag{
 		cli.BoolFlag{

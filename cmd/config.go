@@ -10,7 +10,6 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/Unknwon/com"
 	yaml "gopkg.in/yaml.v2"
 )
 
@@ -29,7 +28,8 @@ type Config struct {
 var config Config
 
 func loadConfig(ymlPath string) error {
-	if com.IsExist(ymlPath) {
+	exist, _ := isFileExist(ymlPath)
+	if exist {
 		Println("find config file", ymlPath)
 		bs, err := ioutil.ReadFile(ymlPath)
 		if err != nil {
@@ -72,11 +72,14 @@ func analysisDirLevel() (int, string, error) {
 		return 0, "", err
 	}
 
-	if com.IsExist(filepath.Join(wd, "gop.yml")) {
+	exist, _ := isFileExist(filepath.Join(wd, "gop.yml"))
+	if exist {
 		return dirLevelRoot, wd, nil
-	} else if filepath.Base(wd) == "src" &&
-		com.IsExist(filepath.Join(filepath.Dir(wd), "gop.yml")) {
-		return dirLevelSrc, filepath.Dir(wd), nil
+	} else if filepath.Base(wd) == "src" {
+		exist, _ = isFileExist(filepath.Join(filepath.Dir(wd), "gop.yml"))
+		if exist {
+			return dirLevelSrc, filepath.Dir(wd), nil
+		}
 	}
 
 	srcDir := filepath.Dir(wd)
@@ -87,7 +90,8 @@ func analysisDirLevel() (int, string, error) {
 		}
 	}
 
-	if srcDir == "" || !com.IsExist(filepath.Join(filepath.Dir(srcDir), "gop.yml")) {
+	exist, _ = isFileExist(filepath.Join(filepath.Dir(srcDir), "gop.yml"))
+	if srcDir == "" || !exist {
 		return dirLevelOutProject, "", errors.New("unknow directory to run gop")
 	}
 

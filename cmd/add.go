@@ -17,14 +17,10 @@ import (
 // CmdAdd represents add a new dependency package and it's dependencies to this project
 var CmdAdd = cli.Command{
 	Name:        "add",
-	Usage:       "add a new dependency",
-	Description: `add a new dependency`,
+	Usage:       "Add one or more new dependency packages",
+	Description: `Add one or more new dependency packages`,
 	Action:      runAdd,
 	Flags: []cli.Flag{
-		cli.BoolFlag{
-			Name:  "update, u",
-			Usage: "update the dependency package",
-		},
 		cli.BoolFlag{
 			Name:  "test, t",
 			Usage: "include test files",
@@ -58,24 +54,13 @@ func add(ctx *cli.Context, name, projPath, globalGoPath string) error {
 		return err
 	}
 
-	info, err := os.Stat(dstPath)
+	_, err = os.Stat(dstPath)
 	if err != nil {
 		if !os.IsNotExist(err) {
 			return err
 		}
 
 		fmt.Println("Copying", name)
-		err = copyPkg(absPkgPath, dstPath, ctx.Bool("test"))
-		if err != nil {
-			return err
-		}
-	} else if ctx.IsSet("update") {
-		if !info.IsDir() {
-			return fmt.Errorf("Dest dir %s is a file", dstPath)
-		}
-
-		fmt.Println("Copying", name)
-		os.RemoveAll(dstPath)
 		err = copyPkg(absPkgPath, dstPath, ctx.Bool("test"))
 		if err != nil {
 			return err

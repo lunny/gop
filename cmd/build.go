@@ -12,16 +12,14 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/Unknwon/com"
-
 	"github.com/urfave/cli"
 )
 
 // CmdBuild represents
 var CmdBuild = cli.Command{
 	Name:            "build",
-	Usage:           "Build this project",
-	Description:     `Build this project`,
+	Usage:           "Build the target",
+	Description:     `Build the target`,
 	Action:          runBuild,
 	SkipFlagParsing: true,
 }
@@ -74,7 +72,8 @@ func analysisTarget(level int, targetName, projectRoot string) error {
 		}
 
 		if curTarget == nil {
-			if !com.IsExist(filepath.Join(projectRoot, "src", targetName)) {
+			exist, _ := isDirExist(filepath.Join(projectRoot, "src", targetName))
+			if !exist {
 				return errors.New("unknow target")
 			}
 
