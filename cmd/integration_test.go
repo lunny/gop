@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -63,17 +64,27 @@ func TestInit(t *testing.T) {
 	assert.NoError(t, err)
 }
 
+func assertExist(t *testing.T, rootPath, relPath string) {
+	paths := strings.Split(relPath, "/")
+	assert.True(t, com.IsExist(filepath.Join(append([]string{rootPath}, paths...)...)))
+}
+
+func assertNotExist(t *testing.T, rootPath, relPath string) {
+	paths := strings.Split(relPath, "/")
+	assert.False(t, com.IsExist(filepath.Join(append([]string{rootPath}, paths...)...)))
+}
+
 func TestAddAndRm(t *testing.T) {
 	tmpDir := filepath.Join(os.TempDir(), fmt.Sprintf("%d", time.Now().UnixNano()))
 	os.MkdirAll(tmpDir, os.ModePerm)
 
 	err := runCommand(CmdInit, tmpDir)
 	assert.NoError(t, err)
-	assert.True(t, com.IsExist(filepath.Join(tmpDir, "src")))
-	assert.True(t, com.IsExist(filepath.Join(tmpDir, "src", "main")))
-	assert.True(t, com.IsExist(filepath.Join(tmpDir, "src", "vendor")))
-	assert.True(t, com.IsExist(filepath.Join(tmpDir, "src", "main", "main.go")))
-	assert.True(t, com.IsExist(filepath.Join(tmpDir, "gop.yml")))
+	assertExist(t, tmpDir, "src")
+	assertExist(t, tmpDir, "src/main")
+	assertExist(t, tmpDir, "src/vendor")
+	assertExist(t, tmpDir, "src/main/main.go")
+	assertExist(t, tmpDir, "gop.yml")
 
 	cmdGet := NewCommand("get", "github.com/lunny/tango")
 	_, err = cmdGet.Run()
@@ -81,33 +92,33 @@ func TestAddAndRm(t *testing.T) {
 
 	err = runCommand(CmdAdd, filepath.Join(tmpDir, "src"), "./cmd")
 	assert.Error(t, err)
-	assert.False(t, com.IsExist(filepath.Join(tmpDir, "src", "vendor", "cmd")))
+	assertNotExist(t, tmpDir, "src/vendor/cmd")
 
 	err = runCommand(CmdAdd, filepath.Join(tmpDir, "src"), "github.com/noexist/cmd")
 	assert.Error(t, err)
-	assert.False(t, com.IsExist(filepath.Join(tmpDir, "src", "vendor", "github.com", "noexist", "cmd")))
+	assertNotExist(t, tmpDir, "src/vendor/github.com/noexist/cmd")
 
 	err = runCommand(CmdAdd, filepath.Join(tmpDir, "src"), "github.com/lunny/tango")
 	assert.NoError(t, err)
-	assert.True(t, com.IsExist(filepath.Join(tmpDir, "src", "vendor", "github.com", "lunny", "tango")))
-	assert.True(t, com.IsExist(filepath.Join(tmpDir, "src", "vendor", "github.com", "lunny", "log")))
+	assertExist(t, tmpDir, "src/vendor/github.com/lunny/tango")
+	assertExist(t, tmpDir, "src/vendor/github.com/lunny/log")
 
-	err = runCommand(CmdAdd, filepath.Join(tmpDir, "src"), "-u", "github.com/lunny/tango")
+	err = runCommand(CmdAdd, filepath.Join(tmpDir, "src"), "github.com/lunny/tango")
 	assert.NoError(t, err)
-	assert.True(t, com.IsExist(filepath.Join(tmpDir, "src", "vendor", "github.com", "lunny", "tango")))
-	assert.True(t, com.IsExist(filepath.Join(tmpDir, "src", "vendor", "github.com", "lunny", "log")))
+	assertExist(t, tmpDir, "src/vendor/github.com/lunny/tango")
+	assertExist(t, tmpDir, "src/vendor/github.com/lunny/log")
 
 	err = runCommand(CmdRemove, filepath.Join(tmpDir, "src"), "github.com/lunny/tango")
 	assert.NoError(t, err)
 
-	assert.True(t, com.IsExist(filepath.Join(tmpDir, "src", "vendor", "github.com", "lunny")))
-	assert.False(t, com.IsExist(filepath.Join(tmpDir, "src", "vendor", "github.com", "lunny", "tango")))
-	assert.True(t, com.IsExist(filepath.Join(tmpDir, "src", "vendor", "github.com", "lunny", "log")))
+	assertExist(t, tmpDir, "src/vendor/github.com/lunny")
+	assertNotExist(t, tmpDir, "src/vendor/github.com/lunny/tango")
+	assertExist(t, tmpDir, "src/vendor/github.com/lunny/log")
 
 	err = runCommand(CmdRemove, filepath.Join(tmpDir, "src"), "github.com/lunny/log")
 	assert.NoError(t, err)
 
-	assert.True(t, com.IsExist(filepath.Join(tmpDir, "src", "vendor", "github.com", "lunny")))
-	assert.False(t, com.IsExist(filepath.Join(tmpDir, "src", "vendor", "github.com", "lunny", "tango")))
-	assert.False(t, com.IsExist(filepath.Join(tmpDir, "src", "vendor", "github.com", "lunny", "log")))
+	assertExist(t, tmpDir, "src/vendor/github.com/lunny")
+	assertNotExist(t, tmpDir, "src/vendor/github.com/lunny/tango")
+	assertNotExist(t, tmpDir, "src/vendor/github.com/lunny/log")
 }

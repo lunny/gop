@@ -18,8 +18,8 @@ import (
 // CmdRelease represents
 var CmdRelease = cli.Command{
 	Name:            "release",
-	Usage:           "Release this project",
-	Description:     `Release this project`,
+	Usage:           "Release the target according the gop.yml",
+	Description:     `Release the target according the gop.yml`,
 	Action:          runRelease,
 	SkipFlagParsing: true,
 }
@@ -89,13 +89,15 @@ func runRelease(ctx *cli.Context) error {
 	for _, asset := range target.Assets {
 		srcPath := filepath.Join(projectRoot, "src", target.Dir, asset)
 		dstPath := filepath.Join(projectRoot, "bin", target.Name, asset)
-		if com.IsDir(srcPath) {
+		exist, _ := isDirExist(srcPath)
+		fileExist, _ := isFileExist(srcPath)
+		if exist {
 			os.RemoveAll(dstPath)
 			err = com.CopyDir(srcPath, dstPath)
 			if err != nil {
 				Errorf("copy dir %s to %s failed: %v\n", srcPath, dstPath, err)
 			}
-		} else if com.IsFile(srcPath) {
+		} else if fileExist {
 			os.RemoveAll(dstPath)
 			err = com.Copy(srcPath, dstPath)
 			if err != nil {

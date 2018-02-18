@@ -9,15 +9,14 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/Unknwon/com"
 	"github.com/urfave/cli"
 )
 
 // CmdStatus represents
 var CmdStatus = cli.Command{
 	Name:        "status",
-	Usage:       "List this project's dependencies",
-	Description: `List this project's dependencies`,
+	Usage:       "List the target's dependent packages",
+	Description: `List the target's dependent packages`,
 	Action:      runStatus,
 	Flags: []cli.Flag{
 		cli.BoolFlag{
@@ -60,7 +59,8 @@ func runStatus(cmd *cli.Context) error {
 	}
 	for i, imp := range imports {
 		pkg := filepath.Join(projectRoot, "src", imp.Name)
-		if com.IsExist(pkg) {
+		exist, _ := isDirExist(pkg)
+		if exist {
 			continue
 		}
 

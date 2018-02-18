@@ -22,3 +22,17 @@ func isDirExist(dirName string) (bool, error) {
 	}
 	return true, nil
 }
+
+func isFileExist(fileName string) (bool, error) {
+	f, err := os.Stat(fileName)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return false, nil
+		}
+		return false, err
+	}
+	if f.IsDir() {
+		return false, errors.New("the same name directory exist")
+	}
+	return true, nil
+}

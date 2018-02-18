@@ -16,8 +16,8 @@ import (
 // CmdRemove represents
 var CmdRemove = cli.Command{
 	Name:        "rm",
-	Usage:       "remove a dependency",
-	Description: `remove a dependency`,
+	Usage:       "Remove one or more dependent packages",
+	Description: `Remove one or more dependent packages`,
 	Action:      runRemove,
 }
 

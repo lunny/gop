@@ -16,8 +16,8 @@ import (
 // CmdTest represents
 var CmdTest = cli.Command{
 	Name:            "test",
-	Usage:           "Run the test codes",
-	Description:     `Run the test codes`,
+	Usage:           "Run the target test codes",
+	Description:     `Run the target test codes`,
 	Action:          runTest,
 	SkipFlagParsing: true,
 }

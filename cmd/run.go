@@ -12,7 +12,6 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/Unknwon/com"
 	"github.com/urfave/cli"
 	fsnotify "gopkg.in/fsnotify.v1"
 )
@@ -20,8 +19,8 @@ import (
 // CmdRun represents
 var CmdRun = cli.Command{
 	Name:            "run",
-	Usage:           "Run this project",
-	Description:     `Run this project`,
+	Usage:           "Run the target and monitor the source file changes",
+	Description:     `Run the target and monitor the source file changes`,
 	Action:          runRun,
 	SkipFlagParsing: true,
 }
@@ -135,11 +134,13 @@ func runRun(ctx *cli.Context) error {
 							processLock.Unlock()
 						}
 					} else if event.Op&fsnotify.Create == fsnotify.Create {
-						if com.IsDir(event.Name) {
+						exist, _ := isDirExist(event.Name)
+						if exist {
 							watcher.Add(event.Name)
 						}
 					} else if event.Op&fsnotify.Remove == fsnotify.Remove {
-						if com.IsDir(event.Name) {
+						exist, _ := isDirExist(event.Name)
+						if exist {
 							watcher.Remove(event.Name)
 						}
 					}
