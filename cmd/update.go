@@ -22,6 +22,10 @@ var CmdUpdate = cli.Command{
 	Action:      runUpdate,
 	Flags: []cli.Flag{
 		cli.BoolFlag{
+			Name:  "verbose, v",
+			Usage: "Enables verbose progress and debug output",
+		},
+		cli.BoolFlag{
 			Name:  "test, t",
 			Usage: "include test files",
 		},
@@ -30,7 +34,7 @@ var CmdUpdate = cli.Command{
 			Usage: "tags for import package find",
 		},
 		cli.BoolFlag{
-			Name: "full, f",
+			Name:  "full, f",
 			Usage: "if update all dependent packages, default only missing packages",
 		},
 	},
@@ -100,7 +104,7 @@ func update(ctx *cli.Context, name, projPath, globalGoPath string) error {
 
 func runUpdate(ctx *cli.Context) error {
 	if len(ctx.Args()) <= 0 {
-		return errors.New("You have to indicate more than one package")
+		return errors.New("You have to indicate at least one package")
 	}
 
 	globalGoPath, ok := os.LookupEnv("GOPATH")
@@ -108,15 +112,15 @@ func runUpdate(ctx *cli.Context) error {
 		return errors.New("Not found GOPATH")
 	}
 
-	names := ctx.Args()
+	showLog = ctx.IsSet("verbose")
 
 	_, projectRoot, err := analysisDirLevel()
 	if err != nil {
 		return err
 	}
 
-	for _, name := range names {
-		if err = update(ctx, name, projectRoot, globalGoPath); err != nil {
+	for _, arg := range ctx.Args() {
+		if err = update(ctx, arg, projectRoot, globalGoPath); err != nil {
 			return err
 		}
 	}

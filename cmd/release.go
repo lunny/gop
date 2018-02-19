@@ -40,11 +40,8 @@ func runRelease(ctx *cli.Context) error {
 	for i, arg := range args {
 		if arg == "-v" {
 			showLog = true
-			continue
-		}
-		if arg == "-o" {
+		} else if arg == "-o" {
 			find = i
-			break
 		}
 	}
 

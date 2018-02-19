@@ -40,6 +40,12 @@ var CmdInit = cli.Command{
 	Usage:       "Init a new project",
 	Description: `Init a new project`,
 	Action:      runInit,
+	Flags: []cli.Flag{
+		cli.BoolTFlag{
+			Name:  "verbose, v",
+			Usage: "Enables verbose progress and debug output",
+		},
+	},
 }
 
 func runInit(ctx *cli.Context) error {
@@ -47,6 +53,8 @@ func runInit(ctx *cli.Context) error {
 	if err != nil {
 		return err
 	}
+
+	showLog = ctx.IsSet("verbose")
 
 	os.MkdirAll(filepath.Join(wd, "src"), os.ModePerm)
 	os.MkdirAll(filepath.Join(wd, "src", "vendor"), os.ModePerm)
