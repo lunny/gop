@@ -20,6 +20,10 @@ var CmdStatus = cli.Command{
 	Action:      runStatus,
 	Flags: []cli.Flag{
 		cli.BoolFlag{
+			Name:  "verbose, v",
+			Usage: "Enables verbose progress and debug output",
+		},
+		cli.BoolFlag{
 			Name:  "test, t",
 			Usage: "include test files",
 		},
@@ -30,7 +34,9 @@ var CmdStatus = cli.Command{
 	},
 }
 
-func runStatus(cmd *cli.Context) error {
+func runStatus(ctx *cli.Context) error {
+	showLog = ctx.IsSet("verbose")
+
 	level, projectRoot, err := analysisDirLevel()
 	if err != nil {
 		return err
@@ -40,7 +46,7 @@ func runStatus(cmd *cli.Context) error {
 		return err
 	}
 
-	var args = cmd.Args()
+	var args = ctx.Args()
 	var targetName string
 	if len(args) > 0 && !strings.HasPrefix(args[0], "-") {
 		targetName = args[0]
@@ -53,7 +59,7 @@ func runStatus(cmd *cli.Context) error {
 	vendorDir := filepath.Join(projectRoot, "src", "vendor")
 
 	imports, err := ListImports(projectRoot, curTarget.Dir, projectRoot,
-		filepath.Join(projectRoot, "src"), cmd.String("tags"), cmd.Bool("test"))
+		filepath.Join(projectRoot, "src"), ctx.String("tags"), ctx.Bool("test"))
 	if err != nil {
 		return err
 	}

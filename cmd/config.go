@@ -30,7 +30,7 @@ var config Config
 func loadConfig(ymlPath string) error {
 	exist, _ := isFileExist(ymlPath)
 	if exist {
-		Println("find config file", ymlPath)
+		Println("Found config file", ymlPath)
 		bs, err := ioutil.ReadFile(ymlPath)
 		if err != nil {
 			return err

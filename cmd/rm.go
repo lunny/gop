@@ -19,12 +19,20 @@ var CmdRemove = cli.Command{
 	Usage:       "Remove one or more dependent packages",
 	Description: `Remove one or more dependent packages`,
 	Action:      runRemove,
+	Flags: []cli.Flag{
+		cli.BoolFlag{
+			Name:"verbose, v",
+			Usage: "Enables verbose progress and debug output",
+		},
+	},
 }
 
 func runRemove(ctx *cli.Context) error {
 	if len(ctx.Args()) <= 0 {
 		return errors.New("No package to be removed")
 	}
+
+	showLog = ctx.IsSet("verbose")
 
 	_, projectRoot, err := analysisDirLevel()
 	if err != nil {

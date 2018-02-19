@@ -15,12 +15,12 @@ import (
 
 const (
 	// Version of gop
-	Version = "0.6.0218"
+	Version = "0.6.0219"
 )
 
 func main() {
 	app := cli.NewApp()
-	app.Name = "Gop"
+	app.Name = "gop"
 	app.Usage = "Build golang applications out of GOPATH"
 	app.Version = Version
 	app.Commands = []cli.Command{

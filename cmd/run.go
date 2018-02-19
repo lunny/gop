@@ -11,6 +11,7 @@ import (
 	"runtime"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/urfave/cli"
 	fsnotify "gopkg.in/fsnotify.v1"
@@ -28,7 +29,7 @@ var CmdRun = cli.Command{
 var process *os.Process
 var processLock sync.Mutex
 
-func runBinary(exePath string, done chan bool) error {
+func runBinary(exePath string) error {
 	attr := &os.ProcAttr{
 		Dir:   filepath.Dir(exePath),
 		Env:   os.Environ(),
@@ -48,9 +49,10 @@ func runRun(ctx *cli.Context) error {
 	var watchFlagIdx = -1
 	var args = ctx.Args()
 	for i, arg := range args {
-		if arg == "-w" {
+		if arg == "-v" {
+			showLog = true
+		} else if arg == "-w" {
 			watchFlagIdx = i
-			break
 		}
 	}
 
@@ -77,82 +79,89 @@ func runRun(ctx *cli.Context) error {
 
 	exePath := filepath.Join(projectRoot, "src", curTarget.Dir, curTarget.Name+ext)
 	exePath, _ = filepath.Abs(exePath)
+
+	if watchFlagIdx <= -1 {
+		return runBinary(exePath)
+	}
+
+	go func() {
+		processLock.Lock()
+		err := runBinary(exePath)
+		if err != nil {
+			Println("Run failed:", err)
+			process = nil
+		}
+		processLock.Unlock()
+	}()
+
+	watcher, err := fsnotify.NewWatcher()
+	if err != nil {
+		return err
+	}
+	defer watcher.Close()
+
+	err = filepath.Walk(filepath.Join(projectRoot, "src"), func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if info.IsDir() {
+			watcher.Add(path)
+		}
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+
 	done := make(chan bool)
 
-	if watchFlagIdx > -1 {
-		watcher, err := fsnotify.NewWatcher()
-		if err != nil {
-			return err
-		}
-		defer watcher.Close()
-
-		err = filepath.Walk(filepath.Join(projectRoot, "src"), func(path string, info os.FileInfo, err error) error {
-			if err != nil {
-				return err
-			}
-			if info.IsDir() {
-				watcher.Add(path)
-			}
-			return nil
-		})
-		if err != nil {
-			return err
-		}
-
-		go func() {
-			processLock.Lock()
-			err := runBinary(exePath, nil)
-			if err == nil {
-				process = nil
-			}
-			processLock.Unlock()
-		}()
-
-		go func() {
-			for {
-				select {
-				case event := <-watcher.Events:
-					if event.Op&fsnotify.Write == fsnotify.Write {
-						if strings.HasSuffix(event.Name, ".go") {
-							processLock.Lock()
-							if process != nil {
-								if err := process.Kill(); err != nil {
-									log.Println("error:", err)
-									done <- false
-									processLock.Unlock()
-									continue
-								}
-								process = nil
-							}
-							err := runBuildNoCtx(args, isWindows)
-							if err != nil {
-								log.Println("Build Error:", err)
+	go func() {
+		for {
+			select {
+			case event := <-watcher.Events:
+				if event.Op&fsnotify.Write == fsnotify.Write {
+					if strings.HasSuffix(event.Name, ".go") {
+						processLock.Lock()
+						if process != nil {
+							Println("Killing old process")
+							if err := process.Kill(); err != nil {
+								log.Println("Killing old process error:", err)
 								done <- false
-							} else {
-								runBinary(exePath, done)
+								processLock.Unlock()
+								return
 							}
-							processLock.Unlock()
+							process = nil
 						}
-					} else if event.Op&fsnotify.Create == fsnotify.Create {
-						exist, _ := isDirExist(event.Name)
-						if exist {
-							watcher.Add(event.Name)
+						err := runBuildNoCtx(args, isWindows)
+						if err != nil {
+							log.Println("Build error:", err)
+						} else {
+							err = runBinary(exePath)
+							if err != nil {
+								log.Println("Run binary error:", err)
+							}
 						}
-					} else if event.Op&fsnotify.Remove == fsnotify.Remove {
-						exist, _ := isDirExist(event.Name)
-						if exist {
-							watcher.Remove(event.Name)
-						}
+						processLock.Unlock()
 					}
-				case err := <-watcher.Errors:
-					log.Println("error:", err)
-					done <- false
-				case <-done:
-					return
+				} else if event.Op&fsnotify.Create == fsnotify.Create {
+					exist, _ := isDirExist(event.Name)
+					if exist {
+						watcher.Add(event.Name)
+					}
+				} else if event.Op&fsnotify.Remove == fsnotify.Remove {
+					exist, _ := isDirExist(event.Name)
+					if exist {
+						watcher.Remove(event.Name)
+					}
 				}
+			case err := <-watcher.Errors:
+				log.Println("error:", err)
+				done <- false
+				return
+			case <-time.After(200 * time.Millisecond):
 			}
-		}()
-	}
+		}
+	}()
 
 	<-done
 

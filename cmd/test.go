@@ -23,6 +23,13 @@ var CmdTest = cli.Command{
 }
 
 func runTest(ctx *cli.Context) error {
+	var args = ctx.Args()
+	for _, arg := range args {
+		if arg == "-v" {
+			showLog = true
+		}
+	}
+
 	envs := os.Environ()
 	var gopathIdx = -1
 	for i, env := range envs {
@@ -41,7 +48,6 @@ func runTest(ctx *cli.Context) error {
 		return err
 	}
 
-	var args = ctx.Args()
 	var targetName string
 	if len(args) > 0 && !strings.HasPrefix(args[0], "-") {
 		targetName = args[0]

@@ -108,9 +108,10 @@ func runBuildNoCtx(args []string, isWindows bool) error {
 
 	var find = -1
 	for i, arg := range args {
-		if arg == "-o" {
+		if arg == "-v" {
+			showLog = true
+		} else if arg == "-o" {
 			find = i
-			break
 		}
 	}
 
@@ -147,6 +148,7 @@ func runBuildNoCtx(args []string, isWindows bool) error {
 	}
 	cmd.Env = envs
 
+	Println("Building", curTarget.Name)
 	err = cmd.RunInDirPipeline(filepath.Join(projectRoot, "src", curTarget.Dir), os.Stdout, os.Stderr)
 	if err != nil {
 		return err

@@ -24,6 +24,10 @@ var CmdEnsure = cli.Command{
 	Action:      runEnsure,
 	Flags: []cli.Flag{
 		cli.BoolFlag{
+			Name:  "verbose, v",
+			Usage: "Enables verbose progress and debug output",
+		},
+		cli.BoolFlag{
 			Name:  "dry, d",
 			Usage: "Dry run, print what would be done",
 		},
@@ -48,9 +52,9 @@ var CmdEnsure = cli.Command{
 
 var updatedPackage = make(map[string]struct{})
 
-func ensure(cmd *cli.Context, globalGoPath, projectRoot string, target *Target) error {
+func ensure(ctx *cli.Context, globalGoPath, projectRoot string, target *Target) error {
 	vendorDir := filepath.Join(projectRoot, "src", "vendor")
-	imports, err := ListImports(projectRoot, target.Dir, projectRoot, filepath.Join(projectRoot, "src"), cmd.String("tags"), cmd.Bool("test"))
+	imports, err := ListImports(projectRoot, target.Dir, projectRoot, filepath.Join(projectRoot, "src"), ctx.String("tags"), ctx.Bool("test"))
 	if err != nil {
 		return err
 	}
@@ -65,14 +69,14 @@ func ensure(cmd *cli.Context, globalGoPath, projectRoot string, target *Target) 
 		// package dir
 		srcDir := filepath.Join(globalGoPath, "src", imp.Name)
 		// FIXME: dry will lost some packages with -g or -u
-		if cmd.IsSet("dry") {
+		if ctx.IsSet("dry") {
 			fmt.Println("Dry copying", imp.Name)
 			continue
 		}
 
 		// FIXME: imp only UNIX
 		dstDir := filepath.Join(vendorDir, imp.Name)
-		if cmd.IsSet("update") {
+		if ctx.IsSet("update") {
 			if _, ok := updatedPackage[imp.Name]; ok {
 				continue
 			}
@@ -86,14 +90,14 @@ func ensure(cmd *cli.Context, globalGoPath, projectRoot string, target *Target) 
 
 			fmt.Println("Copying", imp.Name)
 			os.RemoveAll(dstDir)
-			err = copyPkg(srcDir, dstDir, cmd.Bool("test"))
+			err = copyPkg(srcDir, dstDir, ctx.Bool("test"))
 			if err != nil {
 				return err
 			}
 
 			updatedPackage[imp.Name] = struct{}{}
 
-			return ensure(cmd, globalGoPath, projectRoot, target)
+			return ensure(ctx, globalGoPath, projectRoot, target)
 		}
 
 		exist, err := isDirExist(dstDir)
@@ -107,7 +111,7 @@ func ensure(cmd *cli.Context, globalGoPath, projectRoot string, target *Target) 
 				return err
 			}
 			if !exist {
-				if cmd.IsSet("get") {
+				if ctx.IsSet("get") {
 					fmt.Println("Downloading", imp.Name)
 					cmdGet := NewCommand("get").AddArguments(imp.Name)
 					err = cmdGet.RunInDirPipeline(filepath.Join(projectRoot, "src"), os.Stdout, os.Stderr)
@@ -116,7 +120,7 @@ func ensure(cmd *cli.Context, globalGoPath, projectRoot string, target *Target) 
 					}
 
 					// scan the package dependencies again since the new package added
-					return ensure(cmd, globalGoPath, projectRoot, target)
+					return ensure(ctx, globalGoPath, projectRoot, target)
 				}
 
 				fmt.Printf("Package %s not found on $GOPATH, please use -g option or go get at first\n", imp.Name)
@@ -124,22 +128,24 @@ func ensure(cmd *cli.Context, globalGoPath, projectRoot string, target *Target) 
 			}
 
 			fmt.Println("Copying", imp.Name)
-			err = copyPkg(srcDir, dstDir, cmd.Bool("test"))
+			err = copyPkg(srcDir, dstDir, ctx.Bool("test"))
 			if err != nil {
 				return err
 			}
 
-			return ensure(cmd, globalGoPath, projectRoot, target)
+			return ensure(ctx, globalGoPath, projectRoot, target)
 		}
 	}
 	return nil
 }
 
-func runEnsure(cmd *cli.Context) error {
+func runEnsure(ctx *cli.Context) error {
 	globalGoPath, ok := os.LookupEnv("GOPATH")
 	if !ok {
 		return errors.New("Not found GOPATH")
 	}
+
+	showLog = ctx.IsSet("verbose")
 
 	level, projectRoot, err := analysisDirLevel()
 	if err != nil {
@@ -150,7 +156,7 @@ func runEnsure(cmd *cli.Context) error {
 		return err
 	}
 
-	var args = cmd.Args()
+	var args = ctx.Args()
 	var targetName string
 	if len(args) > 0 && !strings.HasPrefix(args[0], "-") {
 		targetName = args[0]
@@ -160,7 +166,7 @@ func runEnsure(cmd *cli.Context) error {
 		return err
 	}
 
-	return ensure(cmd, globalGoPath, projectRoot, curTarget)
+	return ensure(ctx, globalGoPath, projectRoot, curTarget)
 }
 
 // IsDir returns true if given path is a directory,

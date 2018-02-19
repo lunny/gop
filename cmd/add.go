@@ -22,6 +22,10 @@ var CmdAdd = cli.Command{
 	Action:      runAdd,
 	Flags: []cli.Flag{
 		cli.BoolFlag{
+			Name:  "verbose, v",
+			Usage: "Enables verbose progress and debug output",
+		},
+		cli.BoolFlag{
 			Name:  "test, t",
 			Usage: "include test files",
 		},
@@ -45,6 +49,8 @@ func add(ctx *cli.Context, name, projPath, globalGoPath string) error {
 	if strings.HasPrefix(name, "../") || filepath.IsAbs(name) || strings.HasPrefix(name, "./") {
 		return errors.New("relative pkg and absolute pkg is not supported, only packages on GOPATH")
 	}
+
+	showLog = ctx.IsSet("verbose")
 
 	absPkgPath := filepath.Join(globalGoPath, "src", name)
 	dstPath := filepath.Join(projPath, "src", "vendor", name)
