@@ -3,7 +3,8 @@
 // license that can be found in the LICENSE file.
 
 /*
-Gop is a project manangement tool for building and manage your golang applications out of GOPATH.
+
+Package gop is a project manangement tool for building and manage your golang applications out of GOPATH.
 Also this means it's not go-getable. GOP copy all denpendencies to src/vendor directory and all application's source is also in this directory.
 A normal process using gop is below:
 
@@ -126,5 +127,4 @@ Run go release on the src directory.
 
 	gop release [target_name]
 */
-
 package main

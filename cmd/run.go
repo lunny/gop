@@ -29,7 +29,7 @@ var CmdRun = cli.Command{
 var process *os.Process
 var processLock sync.Mutex
 
-func runBinary(exePath string) error {
+func runBinary(exePath string, wait bool) error {
 	attr := &os.ProcAttr{
 		Dir:   filepath.Dir(exePath),
 		Env:   os.Environ(),
@@ -42,7 +42,10 @@ func runBinary(exePath string) error {
 		return err
 	}
 
-	return nil
+	if wait {
+		_, err = process.Wait()
+	}
+	return err
 }
 
 func runRun(ctx *cli.Context) error {
@@ -81,12 +84,12 @@ func runRun(ctx *cli.Context) error {
 	exePath, _ = filepath.Abs(exePath)
 
 	if watchFlagIdx <= -1 {
-		return runBinary(exePath)
+		return runBinary(exePath, true)
 	}
 
 	go func() {
 		processLock.Lock()
-		err := runBinary(exePath)
+		err := runBinary(exePath, false)
 		if err != nil {
 			Println("Run failed:", err)
 			process = nil
@@ -136,7 +139,7 @@ func runRun(ctx *cli.Context) error {
 						if err != nil {
 							log.Println("Build error:", err)
 						} else {
-							err = runBinary(exePath)
+							err = runBinary(exePath, false)
 							if err != nil {
 								log.Println("Run binary error:", err)
 							}
