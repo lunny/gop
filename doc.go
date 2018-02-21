@@ -3,21 +3,25 @@
 // license that can be found in the LICENSE file.
 
 /*
+Package gop is a project manangement tool for building your golang applications out of global GOPATH.
+In fact gop will keep both global GOPATH and every project GOPATH. But that means your project will
+not go-getable. Of course, GOP itself is go-getable. GOP copy all denpendencies from global GOPATH
+to your project's src/vendor directory and all application's source is also in src directory.
 
-Package gop is a project manangement tool for building and manage your golang applications out of GOPATH.
-Also this means it's not go-getable. GOP copy all denpendencies to src/vendor directory and all application's source is also in this directory.
 A normal process using gop is below:
 
-    git clone xxx@mydata.com:bac/aaa.git
-    cd aaa
-    gop ensure -g
-    gop build
+	git clone xxx@mydata.com:bac/aaa.git
+	cd aaa
+	gop ensure -g
+	gop build
 	gop test
 
 Features
 
 1. GOPATH compatible
+
 2. Multiple build targets support
+
 3. Put your projects out of global GOPATH
 
 Installation
@@ -28,7 +32,8 @@ Please ensure you have installed the go command, GOP will invoke it on building 
 
 Directory structure
 
-This is an example project's directory.
+Every project should have a GOPATH directory structure and put a gop.yml int the root directory.
+This is an example project's directory tree.
 
 	<project root>
 	├── gop.yml
@@ -53,9 +58,11 @@ This is an example project's directory.
 
 Gop.yml
 
-The project yml configuration file. This is an example. Of course, if you didn't define any target, the default target is src/main and the target name is the project name.
+Gop will recognize a gop project which has gop.yml. The file is also a project configuration file.
+Below is an example. If you didn't define any target, the default target is src/main and the target
+name is the project name.
 
-    targets:
+	targets:
 	- name: myproject1
 		dir: main
 		assets:
@@ -75,13 +82,15 @@ Command
 
 1. init
 
-Create the default directory structs.
+Create the default directory structure tree.
 
 	gop init
 
 2. ensure
 
-Auto copy dependencies from $GOPATH to local project directory. -g will let you automatically call go get <package> when the package is missing on GOPATH. -u will always go get <package> on all the dependencies and copy them to vendor.
+Automatically copy dependencies from $GOPATH to local project directory. -g will let you automatically
+call go get <package> when the package is missing on GOPATH. -u will always go get <package> on all the
+dependencies and copy them to vendor.
 
 	gop ensure [-g|-u] [target_name]
 
@@ -93,38 +102,47 @@ List all dependencies of this project and show the status.
 
 4. add
 
-Add a package to this project. -u will override the package dir on vendor.
+Add one or more packages to this project.
 
-	gop add [-u] <package>
+	gop add <package1> <package2>
 
-5. rm
+5. update
 
-Remove a package from this project.
+Update one or more packages to this project. All missing dependent packages will also be added.
+-f will update exists dependent packages.
 
-	gop rm <package>
+	gop update [-f] <package1> <package2>
 
-6. build
+6. rm
+
+Remove one or more packages from this project.
+
+	gop rm <package1> <package2>
+
+7. build
 
 Run go build on the src directory.
 
 	gop build [target_name]
 
-7. run
+8. run
 
-Run go run on the src directory.
+Run go run on the src directory. -w will monitor the go source code changes and
+automatically build and run again.
 
-	gop run [target_name]
+	gop run [-w] [target_name]
 
-8. test
+9. test
 
 Run go test on the src directory.
 
 	gop test [target_name]
 
-9. release
+10. release
 
 Run go release on the src directory.
 
 	gop release [target_name]
+
 */
 package main

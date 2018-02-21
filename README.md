@@ -108,26 +108,27 @@ gop status [target_name]
 
 ### add
 
-Add a package to this project.
+Add one or more packages to this project.
 
 ```
-gop add <package>
+gop add <package1> <package2>
 ```
 
 ### update
 
-Update a package to this project.
+Update one or more packages to this project. All missing dependent packages will also be added.
+-f will update exists dependent packages.
 
 ```
-gop update <package>
+gop update [-f] <package1> <package2>
 ```
 
 ### rm
 
-Remove a package from this project.
+Remove one or more packages from this project.
 
 ```
-gop rm <package>
+gop rm <package1> <package2>
 ```
 
 ### build
@@ -140,10 +141,11 @@ gop build [target_name]
 
 ### run
 
-Run `go run` on the src directory.
+Run `go run` on the src directory. `-w` will monitor the go source code changes and
+automatically build and run again.
 
 ```
-gop run [target_name]
+gop run [-w] [target_name]
 ```
 
 ### test

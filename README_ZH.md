@@ -112,18 +112,18 @@ gop status [target_name]
 
 ### add
 
-从 GOPATH 中拷贝指定的依赖包到 vendor 目录下。`-u` 将会覆盖原先存在 `vendor` 下面的包。
+从 GOPATH 中拷贝指定的一个或多个依赖包到 vendor 目录下。`-u` 将会覆盖原先存在 `vendor` 下面的包。
 
 ```
-gop add [-u] <package>
+gop add [-u] <package1> <package2>
 ```
 
 ### update
 
-Update a package to this project.
+从 GOPATH 更新一个或多个依赖包到 vendor 目录下。如果有缺失的包会自动添加。`-f` 将会强制更新所有依赖的包。
 
 ```
-gop update <package>
+gop update [-f] <package1> <package2>
 ```
 
 ### rm
@@ -136,7 +136,7 @@ gop rm <package>
 
 ### build
 
-`go build` 编译目标
+`go build` 编译目标。
 
 ```
 gop build [target_name]
@@ -144,10 +144,10 @@ gop build [target_name]
 
 ### run
 
-`go run` 编译并运行目标
+`go run` 编译并运行目标。`-w` 参数将会监视源代码中的Go文件变动并自动重新编译和运行。
 
 ```
-gop run [target_name]
+gop run [-w] [target_name]
 ```
 
 ### test
@@ -169,6 +169,4 @@ gop release [target_name]
 ## TODO
 
 * [ ] 依赖项版本支持
-* [ ] 改进对库编译的支持
-* [ ] `gop run` 支持实时运行
 * [ ] 支持在 `GOPATH` 目录内运行
