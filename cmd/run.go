@@ -49,6 +49,33 @@ func runBinary(exePath string, wait bool) error {
 	return err
 }
 
+func reBuildAndRun(args cli.Args, isWindows bool, exePath string, done chan bool) {
+	fmt.Println("=== Killing the old process")
+	processLock.Lock()
+	if process != nil {
+		if err := process.Kill(); err != nil {
+			log.Println("Killing old process error:", err)
+			done <- false
+			processLock.Unlock()
+			return
+		}
+		process = nil
+	}
+
+	fmt.Printf("=== Rebuilding %s ...\n", args)
+	err := runBuildNoCtx(args, isWindows)
+	if err != nil {
+		log.Println("Build error:", err)
+	} else {
+		fmt.Printf("=== Running %s ...\n", exePath)
+		err = runBinary(exePath, false)
+		if err != nil {
+			log.Println("Run binary error:", err)
+		}
+	}
+	processLock.Unlock()
+}
+
 func runRun(ctx *cli.Context) error {
 	var watchFlagIdx = -1
 	var args = ctx.Args()
@@ -125,30 +152,14 @@ func runRun(ctx *cli.Context) error {
 			case event := <-watcher.Events:
 				if event.Op&fsnotify.Write == fsnotify.Write {
 					if strings.HasSuffix(event.Name, ".go") {
-						fmt.Println("=== Killing the old process")
-						processLock.Lock()
-						if process != nil {
-							if err := process.Kill(); err != nil {
-								log.Println("Killing old process error:", err)
-								done <- false
-								processLock.Unlock()
-								return
-							}
-							process = nil
+						exist, _ := isFileExist(event.Name)
+						if exist {
+							reBuildAndRun(args, isWindows, exePath, done)
 						}
-
-						fmt.Printf("=== Rebuilding %s ...\n", args)
-						err := runBuildNoCtx(args, isWindows)
-						if err != nil {
-							log.Println("Build error:", err)
-						} else {
-							fmt.Printf("=== Running %s ...\n", exePath)
-							err = runBinary(exePath, false)
-							if err != nil {
-								log.Println("Run binary error:", err)
-							}
-						}
-						processLock.Unlock()
+					}
+				} else if event.Op&fsnotify.Rename == fsnotify.Rename {
+					if strings.HasSuffix(event.Name, ".go") {
+						reBuildAndRun(args, isWindows, exePath, done)
 					}
 				} else if event.Op&fsnotify.Create == fsnotify.Create {
 					exist, _ := isDirExist(event.Name)
@@ -156,9 +167,9 @@ func runRun(ctx *cli.Context) error {
 						watcher.Add(event.Name)
 					}
 				} else if event.Op&fsnotify.Remove == fsnotify.Remove {
-					exist, _ := isDirExist(event.Name)
-					if exist {
-						watcher.Remove(event.Name)
+					watcher.Remove(event.Name)
+					if strings.HasSuffix(event.Name, ".go") {
+						reBuildAndRun(args, isWindows, exePath, done)
 					}
 				}
 			case err := <-watcher.Errors:
