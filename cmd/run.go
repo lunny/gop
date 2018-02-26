@@ -5,6 +5,7 @@
 package cmd
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"path/filepath"
@@ -124,9 +125,9 @@ func runRun(ctx *cli.Context) error {
 			case event := <-watcher.Events:
 				if event.Op&fsnotify.Write == fsnotify.Write {
 					if strings.HasSuffix(event.Name, ".go") {
+						fmt.Println("=== Killing the old process")
 						processLock.Lock()
 						if process != nil {
-							Println("Killing old process")
 							if err := process.Kill(); err != nil {
 								log.Println("Killing old process error:", err)
 								done <- false
@@ -135,10 +136,13 @@ func runRun(ctx *cli.Context) error {
 							}
 							process = nil
 						}
+
+						fmt.Printf("=== Rebuilding %s ...\n", args)
 						err := runBuildNoCtx(args, isWindows)
 						if err != nil {
 							log.Println("Build error:", err)
 						} else {
+							fmt.Printf("=== Running %s ...\n", exePath)
 							err = runBinary(exePath, false)
 							if err != nil {
 								log.Println("Run binary error:", err)
