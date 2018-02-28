@@ -145,6 +145,8 @@ func runRun(ctx *cli.Context) error {
 	}
 
 	done := make(chan bool)
+	var lastTimeLock sync.Mutex
+	var lastTime time.Time
 
 	go func() {
 		for {
@@ -154,12 +156,16 @@ func runRun(ctx *cli.Context) error {
 					if strings.HasSuffix(event.Name, ".go") {
 						exist, _ := isFileExist(event.Name)
 						if exist {
-							reBuildAndRun(args, isWindows, exePath, done)
+							lastTimeLock.Lock()
+							lastTime = time.Now()
+							lastTimeLock.Unlock()
 						}
 					}
 				} else if event.Op&fsnotify.Rename == fsnotify.Rename {
 					if strings.HasSuffix(event.Name, ".go") {
-						reBuildAndRun(args, isWindows, exePath, done)
+						lastTimeLock.Lock()
+						lastTime = time.Now()
+						lastTimeLock.Unlock()
 					}
 				} else if event.Op&fsnotify.Create == fsnotify.Create {
 					exist, _ := isDirExist(event.Name)
@@ -169,7 +175,9 @@ func runRun(ctx *cli.Context) error {
 				} else if event.Op&fsnotify.Remove == fsnotify.Remove {
 					watcher.Remove(event.Name)
 					if strings.HasSuffix(event.Name, ".go") {
-						reBuildAndRun(args, isWindows, exePath, done)
+						lastTimeLock.Lock()
+						lastTime = time.Now()
+						lastTimeLock.Unlock()
 					}
 				}
 			case err := <-watcher.Errors:
@@ -177,6 +185,17 @@ func runRun(ctx *cli.Context) error {
 				done <- false
 				return
 			case <-time.After(200 * time.Millisecond):
+				var reBuild bool
+				now := time.Now()
+				lastTimeLock.Lock()
+				reBuild = !lastTime.IsZero() && now.Unix()-lastTime.Unix() >= 1
+				if reBuild {
+					lastTime = time.Time{}
+				}
+				lastTimeLock.Unlock()
+				if reBuild {
+					reBuildAndRun(args, isWindows, exePath, done)
+				}
 			}
 		}
 	}()
