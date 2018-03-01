@@ -49,9 +49,8 @@ func runBinary(exePath string, wait bool) error {
 	return err
 }
 
-func reBuildAndRun(args cli.Args, isWindows bool, exePath string, done chan bool) {
+func killOldProcess(done chan bool) {
 	fmt.Println("=== Killing the old process")
-	processLock.Lock()
 	if process != nil {
 		if err := process.Kill(); err != nil {
 			log.Println("Killing old process error:", err)
@@ -61,12 +60,23 @@ func reBuildAndRun(args cli.Args, isWindows bool, exePath string, done chan bool
 		}
 		process = nil
 	}
+}
+
+func reBuildAndRun(args cli.Args, isWindows bool, exePath string, done chan bool) {
+	processLock.Lock()
+	if isWindows {
+		killOldProcess(done)
+	}
 
 	fmt.Printf("=== Rebuilding %s ...\n", args)
 	err := runBuildNoCtx(args, isWindows)
 	if err != nil {
 		log.Println("Build error:", err)
 	} else {
+		if !isWindows {
+			killOldProcess(done)
+		}
+
 		fmt.Printf("=== Running %s ...\n", exePath)
 		err = runBinary(exePath, false)
 		if err != nil {
