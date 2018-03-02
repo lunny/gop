@@ -15,9 +15,10 @@ import (
 
 // Target build target
 type Target struct {
-	Name   string
-	Dir    string
-	Assets []string
+	Name     string
+	Dir      string
+	Assets   []string
+	Monitors []string
 }
 
 // Config gop.yml
