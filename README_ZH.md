@@ -80,6 +80,8 @@ targets:
   - templates
   - public
   - config.ini
+  monitors:
+  - config.ini
 ```
 
 ## 命令
