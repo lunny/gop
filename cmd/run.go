@@ -86,6 +86,27 @@ func reBuildAndRun(args cli.Args, isWindows bool, exePath string, done chan bool
 	processLock.Unlock()
 }
 
+const (
+	noNeedReBuildAndRun = iota
+	needReBuildAndRun
+	needReRun
+)
+
+func needReBuild(projectRoot, fileName string) int {
+	if strings.HasSuffix(fileName, ".go") {
+		return needReBuildAndRun
+	} else if strings.HasSuffix(fileName, ".log") {
+		return noNeedReBuildAndRun
+	}
+
+	for _, f := range curTarget.Monitors {
+		if filepath.Join(projectRoot, "src", curTarget.Dir, f) == fileName {
+			return needReRun
+		}
+	}
+	return noNeedReBuildAndRun
+}
+
 func runRun(ctx *cli.Context) error {
 	var watchFlagIdx = -1
 	var args = ctx.Args()
@@ -157,24 +178,29 @@ func runRun(ctx *cli.Context) error {
 	done := make(chan bool)
 	var lastTimeLock sync.Mutex
 	var lastTime time.Time
+	var needChangeType int
 
 	go func() {
 		for {
 			select {
 			case event := <-watcher.Events:
 				if event.Op&fsnotify.Write == fsnotify.Write {
-					if strings.HasSuffix(event.Name, ".go") {
+					needChange := needReBuild(projectRoot, event.Name)
+					if needChange == needReBuildAndRun || needChange == needReRun {
 						exist, _ := isFileExist(event.Name)
 						if exist {
 							lastTimeLock.Lock()
 							lastTime = time.Now()
+							needChangeType = needChange
 							lastTimeLock.Unlock()
 						}
 					}
 				} else if event.Op&fsnotify.Rename == fsnotify.Rename {
-					if strings.HasSuffix(event.Name, ".go") {
+					needChange := needReBuild(projectRoot, event.Name)
+					if needChange == needReBuildAndRun || needChange == needReRun {
 						lastTimeLock.Lock()
 						lastTime = time.Now()
+						needChangeType = needChange
 						lastTimeLock.Unlock()
 					}
 				} else if event.Op&fsnotify.Create == fsnotify.Create {
@@ -184,9 +210,11 @@ func runRun(ctx *cli.Context) error {
 					}
 				} else if event.Op&fsnotify.Remove == fsnotify.Remove {
 					watcher.Remove(event.Name)
-					if strings.HasSuffix(event.Name, ".go") {
+					needChange := needReBuild(projectRoot, event.Name)
+					if needChange == needReBuildAndRun || needChange == needReRun {
 						lastTimeLock.Lock()
 						lastTime = time.Now()
+						needChangeType = needChange
 						lastTimeLock.Unlock()
 					}
 				}
@@ -196,15 +224,30 @@ func runRun(ctx *cli.Context) error {
 				return
 			case <-time.After(200 * time.Millisecond):
 				var reBuild bool
+				var reType int
 				now := time.Now()
 				lastTimeLock.Lock()
 				reBuild = !lastTime.IsZero() && now.Unix()-lastTime.Unix() >= 1
 				if reBuild {
 					lastTime = time.Time{}
+					reType = needChangeType
 				}
 				lastTimeLock.Unlock()
 				if reBuild {
-					reBuildAndRun(args, isWindows, exePath, done)
+					switch reType {
+					case needReBuildAndRun:
+						reBuildAndRun(args, isWindows, exePath, done)
+					case needReRun:
+						processLock.Lock()
+						killOldProcess(done)
+
+						fmt.Printf("=== Running %s ...\n", exePath)
+						err = runBinary(exePath, false)
+						if err != nil {
+							log.Println("Run binary error:", err)
+						}
+						processLock.Unlock()
+					}
 				}
 			}
 		}

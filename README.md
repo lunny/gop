@@ -78,6 +78,8 @@ targets:
   - templates
   - public
   - config.ini
+  monitors:
+  - config.ini
 ```
 
 ## Command
