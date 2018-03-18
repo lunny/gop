@@ -27,6 +27,10 @@ func main() {
   - templates
   - public
 `
+
+	defaultVscodeCfgFile = `{
+	"go.gopath": "${workspaceRoot}"
+}`
 )
 
 var (
@@ -44,6 +48,10 @@ var CmdInit = cli.Command{
 		cli.BoolTFlag{
 			Name:  "verbose, v",
 			Usage: "Enables verbose progress and debug output",
+		},
+		cli.StringFlag{
+			Name:  "editor, e",
+			Usage: "Generate specifial editor configuration. Could be vscode or blank with no editor support",
 		},
 	},
 }
@@ -81,19 +89,44 @@ func runInit(ctx *cli.Context) error {
 	mainFile := filepath.Join(wd, "src", "main", "main.go")
 	_, err = os.Stat(mainFile)
 	if err != nil {
-		if os.IsNotExist(err) {
-			f, err := os.Create(mainFile)
-			if err != nil {
-				return fmt.Errorf("os.Create: %v", err)
-			}
-			defer f.Close()
-			_, err = f.Write([]byte(defaultMainFile))
-			if err != nil {
-				return fmt.Errorf("create main file failed: %v", err)
-			}
-			return nil
+		if !os.IsNotExist(err) {
+			return fmt.Errorf("os.State: %v", err)
 		}
-		return fmt.Errorf("os.State: %v", err)
+
+		f, err := os.Create(mainFile)
+		if err != nil {
+			return fmt.Errorf("os.Create: %v", err)
+		}
+		defer f.Close()
+		_, err = f.Write([]byte(defaultMainFile))
+		if err != nil {
+			return fmt.Errorf("create main file failed: %v", err)
+		}
+	}
+
+	if ctx.IsSet("editor") {
+		switch ctx.String("editor") {
+		case "vscode":
+			os.MkdirAll(filepath.Join(wd, ".vscode"), os.ModePerm)
+			cfgFile := filepath.Join(wd, ".vscode", "settings.json")
+
+			_, err = os.Stat(cfgFile)
+			if err != nil {
+				if !os.IsNotExist(err) {
+					return fmt.Errorf("os.State: %v", err)
+				}
+
+				f, err := os.Create(cfgFile)
+				if err != nil {
+					return fmt.Errorf("os.Create: %v", err)
+				}
+				defer f.Close()
+				_, err = f.Write([]byte(defaultVscodeCfgFile))
+				if err != nil {
+					return fmt.Errorf("create main file failed: %v", err)
+				}
+			}
+		}
 	}
 
 	return nil
