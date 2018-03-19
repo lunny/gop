@@ -62,6 +62,16 @@ func runInit(ctx *cli.Context) error {
 		return err
 	}
 
+	homeDir, err := Home()
+	if err != nil {
+		return err
+	}
+
+	err = loadGlobalConfig(filepath.Join(homeDir, ".gop.yml"))
+	if err != nil {
+		return err
+	}
+
 	showLog = ctx.IsSet("verbose")
 
 	os.MkdirAll(filepath.Join(wd, "src"), os.ModePerm)
@@ -104,27 +114,30 @@ func runInit(ctx *cli.Context) error {
 		}
 	}
 
+	var editor = globalConfig.Get("init.default_editor")
 	if ctx.IsSet("editor") {
-		switch ctx.String("editor") {
-		case "vscode":
-			os.MkdirAll(filepath.Join(wd, ".vscode"), os.ModePerm)
-			cfgFile := filepath.Join(wd, ".vscode", "settings.json")
+		editor = ctx.String("editor")
+	}
 
-			_, err = os.Stat(cfgFile)
+	switch editor {
+	case "vscode":
+		os.MkdirAll(filepath.Join(wd, ".vscode"), os.ModePerm)
+		cfgFile := filepath.Join(wd, ".vscode", "settings.json")
+
+		_, err = os.Stat(cfgFile)
+		if err != nil {
+			if !os.IsNotExist(err) {
+				return fmt.Errorf("os.State: %v", err)
+			}
+
+			f, err := os.Create(cfgFile)
 			if err != nil {
-				if !os.IsNotExist(err) {
-					return fmt.Errorf("os.State: %v", err)
-				}
-
-				f, err := os.Create(cfgFile)
-				if err != nil {
-					return fmt.Errorf("os.Create: %v", err)
-				}
-				defer f.Close()
-				_, err = f.Write([]byte(defaultVscodeCfgFile))
-				if err != nil {
-					return fmt.Errorf("create main file failed: %v", err)
-				}
+				return fmt.Errorf("os.Create: %v", err)
+			}
+			defer f.Close()
+			_, err = f.Write([]byte(defaultVscodeCfgFile))
+			if err != nil {
+				return fmt.Errorf("create main file failed: %v", err)
 			}
 		}
 	}
