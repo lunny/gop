@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/mholt/archiver"
 	"github.com/urfave/cli"
 )
 
@@ -44,6 +45,70 @@ func copyPkg(srcPkgPath, dstPkgPath string, includeTest bool) error {
 	})
 }
 
+// CopyPkg copy package from sources
+func CopyPkg(globalGoPath, pkg, dstPath string, includeTest bool) error {
+	_, err := copyPkgFromGlobalGoPath(globalGoPath, pkg, dstPath, includeTest)
+	if err != nil {
+		if !os.IsNotExist(err) {
+			return err
+		}
+	}
+
+	/*if err == nil && copied {
+		return nil
+	}
+
+	_, err = copyPkgFromCache(pkg, dstPath, includeTest)
+	*/return err
+}
+
+func copyPkgFromGlobalGoPath(globalGoPath, pkg, dstPath string, includeTest bool) (bool, error) {
+	absPkgPath := filepath.Join(globalGoPath, "src", pkg)
+	_, err := os.Stat(absPkgPath)
+	if err != nil {
+		return false, err
+	}
+
+	_, err = os.Stat(dstPath)
+	if err != nil {
+		if !os.IsNotExist(err) {
+			return false, err
+		}
+
+		fmt.Println("Copying", pkg)
+		err = copyPkg(absPkgPath, dstPath, includeTest)
+		if err != nil {
+			return false, err
+		}
+		return true, nil
+	}
+	return false, nil
+}
+
+func copyPkgFromCache(pkg, dstPath string, includeTest bool) (bool, error) {
+	reposRoot := globalConfig.Get("repos.default_dir")
+	absPkgPath := filepath.Join(reposRoot, pkg, "master.zip")
+	_, err := os.Stat(absPkgPath)
+	if err != nil {
+		return false, err
+	}
+
+	_, err = os.Stat(dstPath)
+	if err != nil {
+		if !os.IsNotExist(err) {
+			return false, err
+		}
+
+		fmt.Println("Copying", pkg)
+		err = archiver.Zip.Open(absPkgPath, dstPath)
+		if err != nil {
+			return false, err
+		}
+		return true, nil
+	}
+	return false, nil
+}
+
 // add add one package to vendor
 func add(ctx *cli.Context, name, projPath, globalGoPath string) error {
 	if strings.HasPrefix(name, "../") || filepath.IsAbs(name) || strings.HasPrefix(name, "./") {
@@ -52,30 +117,13 @@ func add(ctx *cli.Context, name, projPath, globalGoPath string) error {
 
 	showLog = ctx.IsSet("verbose")
 
-	absPkgPath := filepath.Join(globalGoPath, "src", name)
 	dstPath := filepath.Join(projPath, "src", "vendor", name)
-
-	_, err := os.Stat(absPkgPath)
+	err := CopyPkg(globalGoPath, name, dstPath, ctx.Bool("test"))
 	if err != nil {
 		return err
 	}
 
-	_, err = os.Stat(dstPath)
-	if err != nil {
-		if !os.IsNotExist(err) {
-			return err
-		}
-
-		fmt.Println("Copying", name)
-		err = copyPkg(absPkgPath, dstPath, ctx.Bool("test"))
-		if err != nil {
-			return err
-		}
-	} else {
-		return nil
-	}
-
-	imports, err := ListImports(globalGoPath, name, projPath, absPkgPath, ctx.String("tags"), ctx.Bool("test"))
+	imports, err := ListImports(globalGoPath, name, projPath, dstPath, ctx.String("tags"), ctx.Bool("test"))
 	if err != nil {
 		return err
 	}
@@ -107,6 +155,16 @@ func runAdd(ctx *cli.Context) error {
 	globalGoPath, ok := os.LookupEnv("GOPATH")
 	if !ok {
 		return errors.New("Not found GOPATH")
+	}
+
+	homeDir, err := Home()
+	if err != nil {
+		return err
+	}
+
+	err = loadGlobalConfig(filepath.Join(homeDir, ".gop.yml"))
+	if err != nil {
+		return err
 	}
 
 	names := ctx.Args()

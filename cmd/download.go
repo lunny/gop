@@ -1,3 +1,7 @@
+// Copyright 2017 The Gop Authors. All rights reserved.
+// Use of this source code is governed by a MIT-style
+// license that can be found in the LICENSE file.
+
 package cmd
 
 import (
@@ -31,8 +35,6 @@ func downloadFromGithub(pkg, refName, dstDir string) error {
 	if IsExist(pkgCachePath) {
 		return nil
 	}
-
-	Println(pkgCachePath, "is not exist")
 
 	url := fmt.Sprintf("https://%s/archive/%s.zip", pkg, refName)
 	Println("Downloading from", url)
@@ -106,12 +108,26 @@ var CmdDownload = cli.Command{
 			Name:  "source, s",
 			Usage: "Download source",
 		},
+		cli.StringFlag{
+			Name:  "target, t",
+			Usage: "Download target directory",
+		},
 	},
 }
 
 func runDownload(ctx *cli.Context) error {
 	if len(ctx.Args()) <= 0 {
 		return errors.New("You have to indicate one or more packages")
+	}
+
+	homeDir, err := Home()
+	if err != nil {
+		return err
+	}
+
+	err = loadGlobalConfig(filepath.Join(homeDir, ".gop.yml"))
+	if err != nil {
+		return err
 	}
 
 	showLog = ctx.IsSet("verbose")
@@ -126,7 +142,11 @@ func runDownload(ctx *cli.Context) error {
 
 func download(ctx *cli.Context, pkg string) error {
 	pkgPaths := strings.Split(pkg, "/")
-	dstDir := filepath.Join(append([]string{"./"}, pkgPaths...)...)
+	var rootDir = globalConfig.Get("repos.default_dir")
+	if ctx.String("target") != "" {
+		rootDir = ctx.String("target")
+	}
+	dstDir := filepath.Join(append([]string{rootDir}, pkgPaths...)...)
 
 	var err error
 	switch ctx.String("source") {
