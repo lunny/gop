@@ -156,19 +156,24 @@ func download(ctx *cli.Context, pkg string) error {
 	if ctx.String("target") != "" {
 		rootDir = ctx.String("target")
 	}
-	dstDir := filepath.Join(append([]string{rootDir}, pkgPaths...)...)
+	paths := append([]string{rootDir}, pkgPaths...)
+	dstDir := filepath.Join(paths...)
 
-	var err error
+	var (
+		err     error
+		refName = "master"
+	)
+
 	switch ctx.String("source") {
 	case "origin":
-		err = downloadFromGithub(ctx, pkg, "master", dstDir)
+		err = downloadFromGithub(ctx, pkg, refName, dstDir)
 	case "gopm":
-		err = downloadFromGopm(ctx, pkg, "master", dstDir)
+		err = downloadFromGopm(ctx, pkg, refName, dstDir)
 	default:
-		err := downloadFromGithub(ctx, pkg, "master", dstDir)
+		err := downloadFromGithub(ctx, pkg, refName, dstDir)
 		if err != nil {
 			Println("Downloading failed:", err)
-			err = downloadFromGopm(ctx, pkg, "master", dstDir)
+			err = downloadFromGopm(ctx, pkg, refName, dstDir)
 		}
 	}
 	if err != nil {
@@ -179,14 +184,38 @@ func download(ctx *cli.Context, pkg string) error {
 		return nil
 	}
 
+	tmpBaseDir, err := ioutil.TempDir(os.TempDir(), "")
+	if err != nil {
+		return err
+	}
 	// extract files to a tempory directory
-	tmpDir, err := ioutil.TempDir(os.TempDir(), strings.Replace(pkg, "/", "_", -1))
+	tmpDir := filepath.Join(append([]string{tmpBaseDir, "src"}, pkgPaths...)...)
+	os.MkdirAll(filepath.Dir(tmpDir), os.ModePerm)
+
+	tmpExtractDir, err := ioutil.TempDir(os.TempDir(), "")
 	if err != nil {
 		return err
 	}
 
-	err = archiver.Zip.Open(filepath.Join(dstDir, "master.zip"), tmpDir)
+	err = archiver.Zip.Open(filepath.Join(dstDir, refName+".zip"), tmpExtractDir)
 	if err != nil {
+		return err
+	}
+
+	f, err := os.Open(tmpExtractDir)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	dirs, err := f.Readdir(1)
+	if err != nil {
+		return err
+	}
+	if len(dirs) != 1 {
+		return errors.New("unknow package")
+	}
+
+	if err = os.Rename(filepath.Join(tmpExtractDir, dirs[0].Name()), tmpDir); err != nil {
 		return err
 	}
 
@@ -196,7 +225,7 @@ func download(ctx *cli.Context, pkg string) error {
 		return errors.New("Not found GOPATH")
 	}
 
-	ctxt.GOPATH = globalGoPath
+	ctxt.GOPATH = globalGoPath + string(filepath.ListSeparator) + tmpBaseDir
 	if Debug {
 		log.Printf("Import/root path: %s\n", tmpDir)
 		log.Printf("Context GOPATH: %s\n", ctxt.GOPATH)
