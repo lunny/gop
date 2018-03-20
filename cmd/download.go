@@ -25,14 +25,14 @@ var (
 )
 
 // downloadFromGithub download from github
-func downloadFromGithub(pkg, refName, dstDir string) error {
+func downloadFromGithub(ctx *cli.Context, pkg, refName, dstDir string) error {
 	//https://github.com/go-gitea/gitea/archive/master.zip
 	if !strings.HasPrefix(pkg, "github.com") {
 		return ErrNotSupported
 	}
 
 	pkgCachePath := filepath.Join(dstDir, refName+".zip")
-	if IsExist(pkgCachePath) {
+	if !ctx.Bool("override") && IsExist(pkgCachePath) {
 		return nil
 	}
 
@@ -63,9 +63,9 @@ func downloadFromGithub(pkg, refName, dstDir string) error {
 }
 
 // downloadFromGopm download from gopm.io
-func downloadFromGopm(pkg, refName, dstDir string) error {
+func downloadFromGopm(ctx *cli.Context, pkg, refName, dstDir string) error {
 	pkgCachePath := filepath.Join(dstDir, refName+".zip")
-	if IsExist(pkgCachePath) {
+	if !ctx.Bool("override") && IsExist(pkgCachePath) {
 		return nil
 	}
 
@@ -103,8 +103,8 @@ var CmdDownload = cli.Command{
 	Action:      runDownload,
 	Flags: []cli.Flag{
 		cli.BoolFlag{
-			Name:  "verbose, v",
-			Usage: "Enables verbose progress and debug output",
+			Name:  "override, o",
+			Usage: "Download packages even it exists.",
 		},
 		cli.BoolFlag{
 			Name:  "recursive, r",
@@ -117,6 +117,10 @@ var CmdDownload = cli.Command{
 		cli.StringFlag{
 			Name:  "target, t",
 			Usage: "Download target directory",
+		},
+		cli.BoolFlag{
+			Name:  "verbose, v",
+			Usage: "Enables verbose progress and debug output",
 		},
 	},
 }
@@ -157,14 +161,14 @@ func download(ctx *cli.Context, pkg string) error {
 	var err error
 	switch ctx.String("source") {
 	case "origin":
-		err = downloadFromGithub(pkg, "master", dstDir)
+		err = downloadFromGithub(ctx, pkg, "master", dstDir)
 	case "gopm":
-		err = downloadFromGopm(pkg, "master", dstDir)
+		err = downloadFromGopm(ctx, pkg, "master", dstDir)
 	default:
-		err := downloadFromGithub(pkg, "master", dstDir)
+		err := downloadFromGithub(ctx, pkg, "master", dstDir)
 		if err != nil {
 			Println("Downloading failed:", err)
-			err = downloadFromGopm(pkg, "master", dstDir)
+			err = downloadFromGopm(ctx, pkg, "master", dstDir)
 		}
 	}
 	if err != nil {
