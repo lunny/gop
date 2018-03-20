@@ -44,8 +44,7 @@ func downloadFromGithub(pkg, refName, dstDir string) error {
 	}
 	defer resp.Body.Close()
 
-	os.MkdirAll(dstDir, os.ModePerm)
-	f, err := os.Create(pkgCachePath)
+	f, err := ioutil.TempFile(os.TempDir(), "github.com")
 	if err != nil {
 		return err
 	}
@@ -53,10 +52,14 @@ func downloadFromGithub(pkg, refName, dstDir string) error {
 
 	_, err = io.Copy(f, resp.Body)
 	if err != nil {
-		f.Close()
-		os.Remove(pkgCachePath)
+		return err
 	}
-	return err
+
+	if err = os.MkdirAll(dstDir, os.ModePerm); err != nil {
+		return err
+	}
+
+	return os.Rename(f.Name(), pkgCachePath)
 }
 
 // downloadFromGopm download from gopm.io
@@ -74,8 +77,7 @@ func downloadFromGopm(pkg, refName, dstDir string) error {
 	}
 	defer resp.Body.Close()
 
-	os.MkdirAll(dstDir, os.ModePerm)
-	f, err := os.Create(pkgCachePath)
+	f, err := ioutil.TempFile(os.TempDir(), "gopm.io")
 	if err != nil {
 		return err
 	}
@@ -83,10 +85,14 @@ func downloadFromGopm(pkg, refName, dstDir string) error {
 
 	_, err = io.Copy(f, resp.Body)
 	if err != nil {
-		f.Close()
-		os.Remove(pkgCachePath)
+		return err
 	}
-	return err
+
+	if err = os.MkdirAll(dstDir, os.ModePerm); err != nil {
+		return err
+	}
+
+	return os.Rename(f.Name(), pkgCachePath)
 }
 
 // CmdDownload represents download a package from github or gopm.io
