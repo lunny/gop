@@ -86,8 +86,7 @@ func copyPkgFromGlobalGoPath(globalGoPath, pkg, dstPath string, includeTest bool
 }
 
 func copyPkgFromCache(pkg, dstPath string, includeTest bool) (bool, error) {
-	reposRoot := globalConfig.Get("repos.default_dir")
-	absPkgPath := filepath.Join(reposRoot, pkg, "master.zip")
+	absPkgPath := filepath.Join(globalConfig.Repos.DefaultDir, pkg, "master.zip")
 	_, err := os.Stat(absPkgPath)
 	if err != nil {
 		return false, err

@@ -24,19 +24,15 @@ var (
 	ErrNotSupported = errors.New("The package path is not supported")
 )
 
-// downloadFromGithub download from github
-func downloadFromGithub(ctx *cli.Context, pkg, refName, dstDir string) error {
-	//https://github.com/go-gitea/gitea/archive/master.zip
-	if !strings.HasPrefix(pkg, "github.com") {
-		return ErrNotSupported
-	}
-
+// downloadFromGithubLike download from github like site, for example: github, gitea and etc.
+//https://github.com/go-gitea/gitea/archive/master.zip
+func downloadFromGithubLike(ctx *cli.Context, urlPrefix, pkgPrefix, pkg, refName, dstDir string) error {
 	pkgCachePath := filepath.Join(dstDir, refName+".zip")
 	if !ctx.Bool("override") && IsExist(pkgCachePath) {
 		return nil
 	}
 
-	url := fmt.Sprintf("https://%s/archive/%s.zip", pkg, refName)
+	url := fmt.Sprintf("%s/%s/archive/%s.zip", urlPrefix, strings.TrimLeft(pkg, pkgPrefix), refName)
 	Println("Downloading from", url)
 	resp, err := http.Get(url)
 	if err != nil {
@@ -44,7 +40,7 @@ func downloadFromGithub(ctx *cli.Context, pkg, refName, dstDir string) error {
 	}
 	defer resp.Body.Close()
 
-	f, err := ioutil.TempFile(os.TempDir(), "github.com")
+	f, err := ioutil.TempFile(os.TempDir(), pkgPrefix)
 	if err != nil {
 		return err
 	}
@@ -152,7 +148,7 @@ func runDownload(ctx *cli.Context) error {
 
 func download(ctx *cli.Context, pkg string) error {
 	pkgPaths := strings.Split(pkg, "/")
-	var rootDir = globalConfig.Get("repos.default_dir")
+	var rootDir = globalConfig.Repos.DefaultDir
 	if ctx.String("target") != "" {
 		rootDir = ctx.String("target")
 	}
@@ -164,13 +160,31 @@ func download(ctx *cli.Context, pkg string) error {
 		refName = "master"
 	)
 
-	switch ctx.String("source") {
+	source := ctx.String("source")
+	switch source {
 	case "origin":
-		err = downloadFromGithub(ctx, pkg, refName, dstDir)
+		var found bool
+		for _, vals := range globalConfig.Sources {
+			if strings.HasPrefix(pkg, vals.PkgPrefix) {
+				found = true
+				err = downloadFromGithubLike(ctx, vals.UrlPrefix, vals.PkgPrefix, pkg, refName, dstDir)
+				break
+			}
+		}
+
+		if !found {
+			return ErrNotSupported
+		}
 	case "gopm":
 		err = downloadFromGopm(ctx, pkg, refName, dstDir)
 	default:
-		err := downloadFromGithub(ctx, pkg, refName, dstDir)
+		for _, vals := range globalConfig.Sources {
+			if strings.HasPrefix(pkg, vals.PkgPrefix) {
+				err = downloadFromGithubLike(ctx, vals.UrlPrefix, vals.PkgPrefix, pkg, refName, dstDir)
+				break
+			}
+		}
+
 		if err != nil {
 			Println("Downloading failed:", err)
 			err = downloadFromGopm(ctx, pkg, refName, dstDir)
