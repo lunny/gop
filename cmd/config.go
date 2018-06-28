@@ -91,7 +91,7 @@ func (g *GlobalConfig) Get(key string) string {
 	v := reflect.ValueOf(globalConfig).FieldByNameFunc(func(field string) bool {
 		return snakeCasedName(field) == keys[0]
 	})
-	if v.IsNil() || !v.IsValid() {
+	if !v.IsValid() || (v.Kind() == reflect.Ptr && v.IsNil()) {
 		return ""
 	}
 
@@ -102,7 +102,7 @@ func (g *GlobalConfig) Get(key string) string {
 			vv := v.FieldByNameFunc(func(field string) bool {
 				return snakeCasedName(field) == keys[1]
 			})
-			if !vv.IsNil() && vv.IsValid() {
+			if vv.IsValid() {
 				return fmt.Sprintf("%v", vv.Interface())
 			}
 		} else if v.Type().Kind() == reflect.Map {
