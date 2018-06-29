@@ -86,7 +86,6 @@ func ensure(ctx *cli.Context, globalGoPath, projectRoot string, target *Target) 
 				return err
 			}
 
-			fmt.Println("Copying", imp.Name)
 			os.RemoveAll(dstDir)
 			err = CopyPkg(globalGoPath, imp.Name, dstDir, ctx.Bool("test"))
 			if err != nil {
@@ -128,7 +127,6 @@ func ensure(ctx *cli.Context, globalGoPath, projectRoot string, target *Target) 
 				return nil
 			}
 
-			fmt.Println("Copying", imp.Name)
 			err = CopyPkg(globalGoPath, imp.Name, dstDir, ctx.Bool("test"))
 			if err != nil {
 				return err
