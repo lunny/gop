@@ -89,7 +89,15 @@ targets:
 Create the default directory structure tree.
 
 ```
+mkdir newproject
+cd newproject
 gop init
+```
+
+and you can also create config file for vscode
+
+```
+gop init -e=vscode
 ```
 
 ### ensure

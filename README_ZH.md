@@ -96,6 +96,12 @@ cd newproject
 gop init
 ```
 
+如果你使用Vscode开发，你也可以同时创建编辑器的配置文件
+
+```
+gop init -e=vscode
+```
+
 ### ensure
 
 自动从全局 GOPATH 拷贝所需要的依赖项到 src/vendor 目录下。`-g` 参数将会自动调用 `go get <package>` 下载不在全局 `GOPATH` 中的包并且拷贝到 `vendor` 下。 `-u` 则总是调用 `go get <package>` 更新每一个依赖包并且拷贝到 `vendor` 下。
