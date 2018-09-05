@@ -144,7 +144,7 @@ gop rm <package>
 
 ### build
 
-`go build` 编译目标。
+`go build` 编译目标。如果希望在编译之前自动之行 `ensure` 命令，可以使用 `-e`。
 
 ```
 gop build [-e] [target_name]
@@ -161,10 +161,10 @@ gop run [-w] [-e] [target_name]
 
 ### test
 
-运行 `go test` 将执行单元测试.
+运行 `go test` 将执行单元测试. 如果希望在编译之前自动之行 `ensure` 命令，可以使用 `-e`。
 
 ```
-gop test [target_name]
+gop test [-e] [target_name]
 ```
 
 ### release

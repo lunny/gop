@@ -121,7 +121,7 @@ func runBuildNoCtx(ctx *cli.Context, args []string, isWindows, ensureFlag bool) 
 			return errors.New("Not found GOPATH")
 		}
 
-		if err = ensure(ctx, globalGoPath, projectRoot, curTarget); err != nil {
+		if err = ensure(ctx, globalGoPath, projectRoot, curTarget, false); err != nil {
 			return err
 		}
 	}

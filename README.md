@@ -160,10 +160,10 @@ gop run [-w] [target_name]
 
 ### test
 
-Run `go test` on the src directory.
+Run `go test` on the src directory. If you want to execute ensure before build, you can use `-e` flag.
 
 ```
-gop test [target_name]
+gop test [-e] [target_name]
 ```
 
 ### release
