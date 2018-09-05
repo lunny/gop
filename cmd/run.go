@@ -62,14 +62,14 @@ func killOldProcess(done chan bool) {
 	}
 }
 
-func reBuildAndRun(args cli.Args, isWindows bool, exePath string, done chan bool) {
+func reBuildAndRun(ctx *cli.Context, args cli.Args, isWindows, ensureFlag bool, exePath string, done chan bool) {
 	processLock.Lock()
 	if isWindows {
 		killOldProcess(done)
 	}
 
 	fmt.Printf("=== Rebuilding %s ...\n", args)
-	err := runBuildNoCtx(args, isWindows)
+	err := runBuildNoCtx(ctx, args, isWindows, ensureFlag)
 	if err != nil {
 		log.Println("Build error:", err)
 	} else {
@@ -108,23 +108,34 @@ func needReBuild(projectRoot, fileName string) int {
 }
 
 func runRun(ctx *cli.Context) error {
-	var watchFlagIdx = -1
-	var args = ctx.Args()
+	var (
+		watchFlagIdx  = -1
+		ensureFlagIdx = -1
+		args          = ctx.Args()
+	)
 	for i, arg := range args {
 		if arg == "-v" {
 			showLog = true
 		} else if arg == "-w" {
 			watchFlagIdx = i
+		} else if arg == "-e" {
+			ensureFlagIdx = i
 		}
 	}
 
 	if watchFlagIdx > -1 {
 		args = append(args[:watchFlagIdx], args[watchFlagIdx+1:]...)
+		if ensureFlagIdx > watchFlagIdx {
+			ensureFlagIdx = ensureFlagIdx - 1
+		}
+	}
+	if ensureFlagIdx > -1 {
+		args = append(args[:ensureFlagIdx], args[ensureFlagIdx+1:]...)
 	}
 
 	var isWindows = runtime.GOOS == "windows"
 	// gop run don't support cross compile
-	err := runBuildNoCtx(args, isWindows)
+	err := runBuildNoCtx(ctx, args, isWindows, ensureFlagIdx > -1)
 	if err != nil {
 		return err
 	}
@@ -236,7 +247,7 @@ func runRun(ctx *cli.Context) error {
 				if reBuild {
 					switch reType {
 					case needReBuildAndRun:
-						reBuildAndRun(args, isWindows, exePath, done)
+						reBuildAndRun(ctx, args, isWindows, ensureFlagIdx > -1, exePath, done)
 					case needReRun:
 						processLock.Lock()
 						killOldProcess(done)
