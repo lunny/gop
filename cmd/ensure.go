@@ -50,9 +50,9 @@ var CmdEnsure = cli.Command{
 
 var updatedPackage = make(map[string]struct{})
 
-func ensure(ctx *cli.Context, globalGoPath, projectRoot string, target *Target) error {
+func ensure(ctx *cli.Context, globalGoPath, projectRoot string, target *Target, isTest bool) error {
 	vendorDir := filepath.Join(projectRoot, "src", "vendor")
-	imports, err := ListImports(projectRoot, target.Dir, projectRoot, filepath.Join(projectRoot, "src"), ctx.String("tags"), ctx.Bool("test"))
+	imports, err := ListImports(projectRoot, target.Dir, projectRoot, filepath.Join(projectRoot, "src"), ctx.String("tags"), isTest)
 	if err != nil {
 		return err
 	}
@@ -94,7 +94,7 @@ func ensure(ctx *cli.Context, globalGoPath, projectRoot string, target *Target) 
 
 			updatedPackage[imp.Name] = struct{}{}
 
-			return ensure(ctx, globalGoPath, projectRoot, target)
+			return ensure(ctx, globalGoPath, projectRoot, target, isTest)
 		}
 
 		exist, err := isDirExist(dstDir)
@@ -120,7 +120,7 @@ func ensure(ctx *cli.Context, globalGoPath, projectRoot string, target *Target) 
 					}
 
 					// scan the package dependencies again since the new package added
-					return ensure(ctx, globalGoPath, projectRoot, target)
+					return ensure(ctx, globalGoPath, projectRoot, target, isTest)
 				}
 
 				fmt.Printf("Package %s not found on $GOPATH, please use -g option or go get at first\n", imp.Name)
@@ -132,7 +132,7 @@ func ensure(ctx *cli.Context, globalGoPath, projectRoot string, target *Target) 
 				return err
 			}
 
-			return ensure(ctx, globalGoPath, projectRoot, target)
+			return ensure(ctx, globalGoPath, projectRoot, target, isTest)
 		}
 	}
 	return nil
@@ -165,5 +165,5 @@ func runEnsure(ctx *cli.Context) error {
 		return err
 	}
 
-	return ensure(ctx, globalGoPath, projectRoot, curTarget)
+	return ensure(ctx, globalGoPath, projectRoot, curTarget, ctx.Bool("test"))
 }

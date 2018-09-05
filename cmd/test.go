@@ -5,6 +5,7 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -24,10 +25,17 @@ var CmdTest = cli.Command{
 
 func runTest(ctx *cli.Context) error {
 	var args = ctx.Args()
-	for _, arg := range args {
+	var ensureFlagIdx = -1
+	for i, arg := range args {
 		if arg == "-v" {
 			showLog = true
+		} else if arg == "-e" {
+			ensureFlagIdx = i
 		}
+	}
+
+	if ensureFlagIdx > -1 {
+		args = append(args[:ensureFlagIdx], args[ensureFlagIdx+1:]...)
 	}
 
 	envs := os.Environ()
@@ -56,6 +64,17 @@ func runTest(ctx *cli.Context) error {
 
 	if err = analysisTarget(level, targetName, projectRoot); err != nil {
 		return err
+	}
+
+	if ensureFlagIdx > -1 {
+		globalGoPath, ok := os.LookupEnv("GOPATH")
+		if !ok {
+			return errors.New("Not found GOPATH")
+		}
+
+		if err = ensure(ctx, globalGoPath, projectRoot, curTarget, true); err != nil {
+			return err
+		}
 	}
 
 	newGopath := fmt.Sprintf("GOPATH=%s", projectRoot)

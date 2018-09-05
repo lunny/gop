@@ -86,7 +86,7 @@ func analysisTarget(level int, targetName, projectRoot string) error {
 	return nil
 }
 
-func runBuildNoCtx(args []string, isWindows bool) error {
+func runBuildNoCtx(ctx *cli.Context, args []string, isWindows, ensureFlag bool) error {
 	level, projectRoot, err := analysisDirLevel()
 	if err != nil {
 		return err
@@ -112,6 +112,17 @@ func runBuildNoCtx(args []string, isWindows bool) error {
 			showLog = true
 		} else if arg == "-o" {
 			find = i
+		}
+	}
+
+	if ensureFlag {
+		globalGoPath, ok := os.LookupEnv("GOPATH")
+		if !ok {
+			return errors.New("Not found GOPATH")
+		}
+
+		if err = ensure(ctx, globalGoPath, projectRoot, curTarget, false); err != nil {
+			return err
 		}
 	}
 
@@ -158,6 +169,17 @@ func runBuildNoCtx(args []string, isWindows bool) error {
 }
 
 func runBuild(ctx *cli.Context) error {
-	return runBuildNoCtx(ctx.Args(), os.Getenv("GOOS") == "windows" ||
-		(os.Getenv("GOOS") == "" && runtime.GOOS == "windows"))
+	args := ctx.Args()
+	var ensureFlagIdx = -1
+	for i, arg := range args {
+		if arg == "-e" {
+			ensureFlagIdx = i
+		}
+	}
+	if ensureFlagIdx > -1 {
+		args = append(args[:ensureFlagIdx], args[ensureFlagIdx+1:]...)
+	}
+
+	return runBuildNoCtx(ctx, args, os.Getenv("GOOS") == "windows" ||
+		(os.Getenv("GOOS") == "" && runtime.GOOS == "windows"), ensureFlagIdx > -1)
 }

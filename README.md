@@ -143,16 +143,16 @@ gop rm <package1> <package2>
 
 ### build
 
-Run `go build` on the src directory.
+Run `go build` on the src directory. If you want to execute ensure before build, you can use `-e` flag.
 
 ```
-gop build [target_name]
+gop build [-e] [target_name]
 ```
 
 ### run
 
 Run `go run` on the src directory. `-w` will monitor the go source code changes and
-automatically build and run again.
+automatically build and run again. `-e` will automatically execute `ensure` before every time build.
 
 ```
 gop run [-w] [target_name]
@@ -160,10 +160,10 @@ gop run [-w] [target_name]
 
 ### test
 
-Run `go test` on the src directory.
+Run `go test` on the src directory. If you want to execute ensure before build, you can use `-e` flag.
 
 ```
-gop test [target_name]
+gop test [-e] [target_name]
 ```
 
 ### release
