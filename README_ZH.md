@@ -147,15 +147,16 @@ gop rm <package>
 `go build` 编译目标。
 
 ```
-gop build [target_name]
+gop build [-e] [target_name]
 ```
 
 ### run
 
-`go run` 编译并运行目标。`-w` 参数将会监视源代码中的Go文件变动并自动重新编译和运行。
+`go run` 编译并运行目标。`-w` 参数将会监视源代码中的Go文件变动并自动重新编译和运行。`-e` 参数将会在每次进行
+编译之前先调用`ensure`确保所有的依赖项都拷贝到了vendor下。
 
 ```
-gop run [-w] [target_name]
+gop run [-w] [-e] [target_name]
 ```
 
 ### test
