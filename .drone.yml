@@ -1,0 +1,52 @@
+workspace:
+  base: /go
+  path: src/github.com/lunny/gop
+
+clone:
+  git:
+    image: plugins/git:next
+    depth: 50
+    tags: true
+
+pipeline:
+
+  test:
+    image: golang:1.8
+    group: testing
+    pull: true
+    commands:
+      - go get -t -d -v ./...
+      - go build -v
+      - go test -v -race -coverprofile=coverage.txt -covermode=atomic
+    when:
+      event: [ push, pull_request ]
+
+  test:
+    image: golang:1.9
+    group: testing
+    pull: true
+    commands:
+      - go get -t -d -v ./...
+      - go build -v
+    when:
+      event: [ push, pull_request ]
+
+  test:
+    image: golang:1.10
+    group: testing
+    pull: true
+    commands:
+      - go get -t -d -v ./...
+      - go build -v
+    when:
+      event: [ push, pull_request ]
+
+  test:
+    image: golang:1.11
+    group: testing
+    pull: true
+    commands:
+      - go get -t -d -v ./...
+      - go build -v
+    when:
+      event: [ push, pull_request ]
