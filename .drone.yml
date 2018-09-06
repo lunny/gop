@@ -12,7 +12,7 @@ pipeline:
 
   test:
     image: golang:1.8
-    group: testing
+    #group: testing
     pull: true
     commands:
       - go get -t -d -v ./...
@@ -23,7 +23,7 @@ pipeline:
 
   test:
     image: golang:1.9
-    group: testing
+    #group: testing
     pull: true
     commands:
       - go get -t -d -v ./...
@@ -33,7 +33,7 @@ pipeline:
 
   test:
     image: golang:1.10
-    group: testing
+    #group: testing
     pull: true
     commands:
       - go get -t -d -v ./...
@@ -43,7 +43,7 @@ pipeline:
 
   test:
     image: golang:1.11
-    group: testing
+    #group: testing
     pull: true
     commands:
       - go get -t -d -v ./...
