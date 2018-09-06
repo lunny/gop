@@ -13,7 +13,7 @@ pipeline:
   test:
     image: golang:1.8
     #group: testing
-    pull: true
+    #pull: true
     commands:
       - go get -t -d -v ./...
       - go build -v
@@ -21,30 +21,30 @@ pipeline:
     when:
       event: [ push, pull_request ]
 
-  test:
+  test1:
     image: golang:1.9
     #group: testing
-    pull: true
+    #pull: true
     commands:
       - go get -t -d -v ./...
       - go build -v
     when:
       event: [ push, pull_request ]
 
-  test:
+  test2:
     image: golang:1.10
     #group: testing
-    pull: true
+    #pull: true
     commands:
       - go get -t -d -v ./...
       - go build -v
     when:
       event: [ push, pull_request ]
 
-  test:
+  test3:
     image: golang:1.11
     #group: testing
-    pull: true
+    #pull: true
     commands:
       - go get -t -d -v ./...
       - go build -v
