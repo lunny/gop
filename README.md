@@ -2,7 +2,8 @@
 
 [简体中文](README_ZH.md)
 
-[![DroneCI](https://gitci.cn/api/badges/lunny/gop/status.svg)](https://gitci.cn/lunny/gop) [![codecov](https://codecov.io/gh/lunny/gop/branch/master/graph/badge.svg)](https://codecov.io/gh/lunny/gop)
+[![CircleCI](https://circleci.com/gh/lunny/gop.svg?style=shield)](https://circleci.com/gh/lunny/gop)
+[![codecov](https://codecov.io/gh/lunny/gop/branch/master/graph/badge.svg)](https://codecov.io/gh/lunny/gop)
 [![](https://goreportcard.com/badge/github.com/lunny/gop)](https://goreportcard.com/report/github.com/lunny/gop) 
 
 GOP is a project manangement tool for building your golang applications out of global GOPATH. In fact gop will keep both global GOPATH and every project GOPATH. But that means your project will  **not** go-getable. Of course, GOP itself is go-getable. GOP copy all denpendencies from global GOPATH to your project's `src/vendor` directory and all application's sources are also in `src` directory.

@@ -69,12 +69,11 @@ func copyPkgFromGlobalGoPath(globalGoPath, pkg, dstPath string, includeTest bool
 		return false, err
 	}
 
-	_, err = os.Stat(dstPath)
+	exist, err := isPkgExist(dstPath)
 	if err != nil {
-		if !os.IsNotExist(err) {
-			return false, err
-		}
-
+		return false, err
+	}
+	if !exist {
 		fmt.Println("Copying", pkg)
 		err = copyPkg(absPkgPath, dstPath, includeTest)
 		if err != nil {

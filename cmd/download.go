@@ -240,11 +240,9 @@ func download(ctx *cli.Context, pkg string) error {
 	}
 
 	ctxt.GOPATH = globalGoPath + string(filepath.ListSeparator) + tmpBaseDir
-	if Debug {
-		log.Printf("Import/root path: %s\n", tmpDir)
-		log.Printf("Context GOPATH: %s\n", ctxt.GOPATH)
-		log.Printf("Srouce path: %s\n", tmpDir)
-	}
+	Printf("Import/root path: %s\n", tmpDir)
+	Printf("Context GOPATH: %s\n", ctxt.GOPATH)
+	Printf("Srouce path: %s\n", tmpDir)
 	dependentPkgs, err := ctxt.Import(pkg, tmpDir, build.AllowBinary)
 	if err != nil {
 		if _, ok := err.(*build.NoGoError); !ok {

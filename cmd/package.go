@@ -105,12 +105,29 @@ func getPkgType(globalGoPath, projectRoot, name string) (PkgType, bool, error) {
 		return PkgTypeProjectGoPath, true, nil
 	}
 
-	exist, err = isDirExist(filepath.Join(projectRoot, "src", "vendor", name))
+	vendorPath := filepath.Join(projectRoot, "src", "vendor", name)
+	exist, err = isDirExist(vendorPath)
 	if err != nil {
 		return PkgTypeUnknown, false, err
 	}
 	if exist {
-		return PkgTypeProjectVendor, true, nil
+		f, err := os.Open(vendorPath)
+		if err != nil {
+			return PkgTypeUnknown, false, err
+		}
+		defer f.Close()
+		files, err := f.Readdirnames(0)
+		if err != nil {
+			return PkgTypeUnknown, false, err
+		}
+
+		for _, f := range files {
+			if filepath.Ext(f) == ".go" {
+				return PkgTypeProjectVendor, true, nil
+			}
+		}
+
+		exist = false
 	}
 
 	exist, err = isDirExist(filepath.Join(globalGoPath, "src", "vendor", name))
@@ -139,11 +156,11 @@ func ListImports(gopath, importPath, projectRoot, srcPath, tags string, isTest b
 	ctxt := build.Default
 	ctxt.BuildTags = strings.Split(tags, " ")
 	ctxt.GOPATH = gopath
-	if Debug {
-		log.Printf("Import/root path: %s : %s\n", importPath, projectRoot)
-		log.Printf("Context GOPATH: %s\n", ctxt.GOPATH)
-		log.Printf("Srouce path: %s\n", srcPath)
-	}
+
+	Printf("Import/root path: %s : %s\n", importPath, projectRoot)
+	Printf("Context GOPATH: %s\n", ctxt.GOPATH)
+	Printf("Source path: %s\n", srcPath)
+
 	pkg, err := ctxt.Import(importPath, srcPath, build.AllowBinary)
 	if err != nil {
 		if _, ok := err.(*build.NoGoError); !ok {
@@ -170,9 +187,7 @@ func ListImports(gopath, importPath, projectRoot, srcPath, tags string, isTest b
 			return nil, err
 		}
 
-		if Debug {
-			log.Printf("Found dependency: %s--%v\n", name, pkgType)
-		}
+		Printf("Found dependency: %s--%v\n", name, pkgType)
 
 		switch pkgType {
 		case PkgTypeGoRoot:
@@ -193,21 +208,25 @@ func ListImports(gopath, importPath, projectRoot, srcPath, tags string, isTest b
 				Name: name,
 				Type: PkgTypeProjectGoPath,
 			})
-			moreImports, err := ListImports(projectRoot, name, projectRoot, filepath.Join(projectRoot, "src"), tags, isTest)
-			if err != nil {
-				return nil, err
+			if exist {
+				moreImports, err := ListImports(projectRoot, name, projectRoot, filepath.Join(projectRoot, "src"), tags, isTest)
+				if err != nil {
+					return nil, err
+				}
+				imports = append(imports, moreImports...)
 			}
-			imports = append(imports, moreImports...)
 		case PkgTypeProjectVendor:
 			imports = append(imports, Pkg{
 				Name: name,
 				Type: PkgTypeProjectVendor,
 			})
-			moreImports, err := ListImports(projectRoot, name, projectRoot, filepath.Join(projectRoot, "src", "vendor"), tags, isTest)
-			if err != nil {
-				return nil, err
+			if exist {
+				moreImports, err := ListImports(projectRoot, name, projectRoot, filepath.Join(projectRoot, "src", "vendor"), tags, isTest)
+				if err != nil {
+					return nil, err
+				}
+				imports = append(imports, moreImports...)
 			}
-			imports = append(imports, moreImports...)
 		default:
 			return nil, fmt.Errorf("unkonw type package")
 		}
