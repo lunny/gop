@@ -125,9 +125,9 @@ func StatDir(rootPath string, includeDir ...bool) ([]string, error) {
 // It returns error when error occurs in underlying functions.
 func CopyDir(srcPath, destPath string, filters ...func(filePath string) bool) error {
 	// Check if target directory exists.
-	if IsExist(destPath) {
+	/*if IsExist(destPath) {
 		return errors.New("file or directory alreay exists: " + destPath)
-	}
+	}*/
 
 	err := os.MkdirAll(destPath, os.ModePerm)
 	if err != nil {

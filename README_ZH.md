@@ -2,7 +2,7 @@
 
 [English](README.md)
 
-[![DroneCI](https://gitci.cn/api/badges/lunny/gop/status.svg)](https://gitci.cn/lunny/gop) [![codecov](https://codecov.io/gh/lunny/gop/branch/master/graph/badge.svg)](https://codecov.io/gh/lunny/gop)
+[![CircleCI](https://circleci.com/gh/lunny/gop.svg?style=shield)](https://circleci.com/gh/lunny/gop) [![codecov](https://codecov.io/gh/lunny/gop/branch/master/graph/badge.svg)](https://codecov.io/gh/lunny/gop)
 [![](https://goreportcard.com/badge/github.com/lunny/gop)](https://goreportcard.com/report/github.com/lunny/gop) 
 
 GOP 是一个专为在GOPATH之外的Go应用开发的管理工具。当然他肯定不支持`Go Get`了。GOP 会将所有的依赖项拷贝到 `src/vendor` 目录下，应用本身的源代码也在 `src` 下。

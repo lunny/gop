@@ -50,6 +50,34 @@ var CmdEnsure = cli.Command{
 
 var updatedPackage = make(map[string]struct{})
 
+func isPkgExist(dir string) (bool, error) {
+	exist, err := isDirExist(dir)
+	if err != nil {
+		return false, err
+	}
+	if !exist {
+		return false, nil
+	}
+
+	f, err := os.Open(dir)
+	if err != nil {
+		return false, err
+	}
+	defer f.Close()
+
+	files, err := f.Readdirnames(0)
+	if err != nil {
+		return false, err
+	}
+
+	for _, f := range files {
+		if filepath.Ext(f) == ".go" {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
 func ensure(ctx *cli.Context, globalGoPath, projectRoot string, target *Target, isTest bool) error {
 	vendorDir := filepath.Join(projectRoot, "src", "vendor")
 	imports, err := ListImports(projectRoot, target.Dir, projectRoot, filepath.Join(projectRoot, "src"), ctx.String("tags"), isTest)
@@ -97,7 +125,7 @@ func ensure(ctx *cli.Context, globalGoPath, projectRoot string, target *Target, 
 			return ensure(ctx, globalGoPath, projectRoot, target, isTest)
 		}
 
-		exist, err := isDirExist(dstDir)
+		exist, err := isPkgExist(dstDir)
 		if err != nil {
 			return err
 		}
