@@ -15,7 +15,7 @@ import (
 
 const (
 	// Version of gop
-	Version = "0.6.0905"
+	Version = "0.7.0322"
 )
 
 func main() {
@@ -36,6 +36,7 @@ func main() {
 		cmd.CmdUpdate,
 		cmd.CmdDownload,
 		cmd.CmdConfig,
+		cmd.CmdVet,
 	}
 
 	err := app.Run(os.Args)
